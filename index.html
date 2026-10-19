@@ -145,6 +145,17 @@ input,select{border:0;background:var(--soft);border-radius:10px}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 :root{--urg:#ff453a;--imp:#ff9f0a;--nor:#0a84ff;--tra:#bf5af2;--com:#ffd60a;--pa:#ff9f0a;--pe:#5e5ce6}
 #msave{color:#000}
+.big-in{font-size:17px;font-weight:500}
+.glab{font-size:13px;color:var(--mu);font-weight:600;margin:2px 4px -6px}
+.group{background:var(--soft);border-radius:12px;overflow:hidden}
+.grow{display:flex;align-items:center;gap:10px;padding:2px 12px;min-height:48px;border-top:.5px solid var(--line);cursor:pointer}
+.grow:first-child{border-top:0}
+.gi{width:22px;text-align:center;flex:none}
+.gl{flex:1;font-weight:500;white-space:nowrap}
+.grow>input,.grow>select{width:auto;min-width:0;max-width:62%;background:transparent;text-align:right;padding:10px 0;color:var(--mu);border-radius:0}
+.grow>select{text-align-last:right}
+.grow .gm{grid-template-columns:70px 96px}
+.grow .gm select,.grow .gm input{background:var(--card);padding:8px}
 .wkn{font-weight:700;font-size:17px}
 .trow{border-top:0!important;padding:10px 12px;border-radius:12px;margin-top:6px}
 .tlist>.trow:first-child{margin-top:0}
@@ -199,20 +210,31 @@ input,select{border:0;background:var(--soft);border-radius:10px}
    <div class="dnav"><button type="button" data-tn="-1" aria-label="Día anterior">‹</button><div class="dt" id="tdl"></div><button type="button" data-tn="1" aria-label="Día siguiente">›</button></div>
   </div>
   <form class="panel" id="tform">
-   <div class="fld"><label class="lab" for="ttxt">¿Qué tienes que hacer?</label><input id="ttxt" type="text" placeholder="Ej.: Repasar ISO 14224, ir al gimnasio, pagar luz…" required></div>
-   <div class="three">
-    <div class="fld"><label class="lab" for="thora">Hora (opcional)</label><input id="thora" type="time"></div>
-    <div class="fld"><label class="lab" for="tdur">Duración</label><select id="tdur"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">1 h</option><option value="90">1 h 30</option><option value="120">2 h</option><option value="180">3 h</option></select></div>
-    <div class="fld"><label class="lab" for="ttipo">Tipo</label><select id="ttipo"><option value="tarea">📝 Tarea</option><option value="trabajo">💼 Trabajo</option><option value="compras">🛒 Compras</option><optgroup label="Hábito (suma minutos)"><option value="ej">🏃 Ejercicio</option><option value="es">📚 Estudio</option><option value="ju">🎮 Juegos</option></optgroup></select></div>
+   <input id="ttxt" class="big-in" type="text" placeholder="Descripción de la tarea" aria-label="Descripción de la tarea" required>
+   <input id="tnota" type="text" placeholder="Notas o enlace" aria-label="Notas o enlace">
+   <div class="glab">Fecha y hora</div>
+   <div class="group">
+    <label class="grow" for="tfecha"><span class="gi">📅</span><span class="gl">Fecha</span><input id="tfecha" type="date" required></label>
+    <label class="grow" for="thora"><span class="gi">🕒</span><span class="gl">Hora</span><input id="thora" type="time"></label>
+    <label class="grow" for="tdur"><span class="gi">⏳</span><span class="gl">Duración</span><select id="tdur"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">1 h</option><option value="90">1 h 30</option><option value="120">2 h</option><option value="180">3 h</option></select></label>
+    <label class="grow" for="taviso"><span class="gi">⏰</span><span class="gl">Aviso</span><select id="taviso"><option value="">Sin aviso</option><option value="0">A la hora</option><option value="10" selected>10 min antes</option><option value="30">30 min antes</option><option value="60">1 h antes</option><option value="1440">1 día antes</option></select></label>
+    <label class="grow" for="trep"><span class="gi">🔁</span><span class="gl">Repetir</span><select id="trep"><option value="">Nunca</option><option value="diario">Cada día</option><option value="laborables">Lunes a viernes</option><option value="semanal">Cada semana</option><option value="quincenal">Cada 2 semanas</option><option value="mensual">Cada mes</option><option value="anual">Cada año</option></select></label>
+    <label class="grow" for="tfin" id="tfinR" hidden><span class="gi">🏁</span><span class="gl">Termina</span><input id="tfin" type="date"></label>
    </div>
-   <div class="two">
-    <div class="fld"><label class="lab" for="tprio">Prioridad</label><select id="tprio"><option value="urgente">🔴 Urgente</option><option value="importante">🟠 Importante</option><option value="normal" selected>🔵 Normal</option></select></div>
-    <div class="fld" id="tprecioF" hidden><label class="lab" for="tprecio">Precio</label><div class="money"><select id="tmon" aria-label="Moneda"><option value="PEN">S/</option><option value="USD">US$</option></select><input id="tprecio" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div></div>
+   <div class="glab">Organización</div>
+   <div class="group">
+    <label class="grow" for="ttipo"><span class="gi">📋</span><span class="gl">Tipo</span><select id="ttipo"><option value="tarea">📝 Tarea</option><option value="trabajo">💼 Trabajo</option><option value="compras">🛒 Compras</option><optgroup label="Hábito (suma minutos)"><option value="ej">🏃 Ejercicio</option><option value="es">📚 Estudio</option><option value="ju">🎮 Juegos</option></optgroup></select></label>
+    <label class="grow" for="tprio"><span class="gi">❗</span><span class="gl">Prioridad</span><select id="tprio"><option value="urgente">🔴 Urgente</option><option value="importante">🟠 Importante</option><option value="normal" selected>🔵 Normal</option></select></label>
+    <div class="grow" id="tprecioF" hidden><span class="gi">💰</span><span class="gl">Precio</span><div class="money gm"><select id="tmon" aria-label="Moneda"><option value="PEN">S/</option><option value="USD">US$</option></select><input id="tprecio" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" aria-label="Precio"></div></div>
    </div>
-   <div class="fld"><label class="lab" for="tnota">Nota (opcional)</label><input id="tnota" type="text" placeholder="Lugar, detalle o enlace"></div>
    <button class="go" id="tsave" type="submit">Agregar tarea</button>
    <div class="t2" style="color:var(--mu);font-size:12px">Si el tipo es Ejercicio, Estudio o Juegos, al marcarla como hecha se suma a tus minutos de ese hábito.</div>
   </form>
+  <div class="panel" id="calSub" hidden>
+   <div class="ph"><h2>📲 Calendario automático</h2></div>
+   <div class="t2" style="color:var(--mu);font-size:13px">Suscríbete una vez desde tu iPhone y todas tus tareas con fecha (también las que se repiten) aparecerán solas en tu Calendario de iCloud y se actualizarán cuando cambies algo.</div>
+   <div class="two"><a class="go" id="calLink" href="#" style="text-align:center;text-decoration:none">Suscribirme en iPhone</a><button type="button" class="ib" id="calCopy" style="padding:13px;font-size:15px">Copiar enlace</button></div>
+  </div>
   <div class="panel">
    <div class="ph"><h2>Pendientes</h2><span class="wk" id="tcount"></span></div>
    <div class="tlist" id="tasks"></div>
@@ -406,46 +428,62 @@ var PRIO_OPTS=[['urgente','🔴 Urgente'],['importante','🟠 Importante'],['nor
 function tTipo(t){return t.tipo||t.cat||'tarea'}
 function tHab(t){var x=tTipo(t);return ['ej','es','ju'].indexOf(x)>=0?x:''}
 function money(v,m){if(v===''||v==null||isNaN(+v))return '';return (m==='USD'?'US$ ':'S/ ')+(+v).toFixed(2)}
-function tSort(a,b){if(!!a.done!==!!b.done)return a.done?1:-1;var pa=PRORD[a.prio||'normal'],pb=PRORD[b.prio||'normal'];if(pa!==pb)return pa-pb;var x=a.hora||'99',y=b.hora||'99';return x<y?-1:x>y?1:(a.ts||0)-(b.ts||0)}
-function tRow(t){var tp=tTipo(t),hb=tHab(t),col=hb?'var(--'+hb+')':tp==='trabajo'?'var(--tra)':tp==='compras'?'var(--com)':'var(--mu)',id=esc(t.id),pr=t.prio||'normal';
- var meta=[t.hora?t.hora+' · '+hm(t.dur||30):'Todo el día',hb?C(hb).n:TIPOS[tp]||'Tarea',money(t.precio,t.mon),t.nota].filter(Boolean).map(esc).join(' · ');
+var REP_TXT={diario:'Cada día',laborables:'Lun a vie',semanal:'Cada semana',quincenal:'Cada 2 semanas',mensual:'Cada mes',anual:'Cada año'};
+var REP_OPTS=[['','Nunca'],['diario','Cada día'],['laborables','Lunes a viernes'],['semanal','Cada semana'],['quincenal','Cada 2 semanas'],['mensual','Cada mes'],['anual','Cada año']];
+var AVISO_OPTS=[['','Sin aviso'],['0','A la hora'],['10','10 min antes'],['30','30 min antes'],['60','1 h antes'],['1440','1 día antes']];
+function occurs(t,d){if(!t.rep)return t.date===d;if(!t.date||d<t.date||(t.fin&&d>t.fin))return false;var a=P(t.date),b=P(d);
+ switch(t.rep){case 'diario':return true;case 'laborables':var w=b.getDay();return w>0&&w<6;case 'semanal':return a.getDay()===b.getDay();
+  case 'quincenal':return Math.round((b-a)/864e5)%14===0;case 'mensual':return a.getDate()===b.getDate();case 'anual':return a.getDate()===b.getDate()&&a.getMonth()===b.getMonth()}return false}
+function isDone(t,d){return t.rep?(t.hechos||[]).indexOf(d)>=0:!!t.done}
+function tSort(A,B){if(A.done!==B.done)return A.done?1:-1;var a=A.t,b=B.t,pa=PRORD[a.prio||'normal'],pb=PRORD[b.prio||'normal'];if(pa!==pb)return pa-pb;var x=a.hora||'99',y=b.hora||'99';return x<y?-1:x>y?1:(a.ts||0)-(b.ts||0)}
+function dayTasks(d){return T.filter(function(t){return occurs(t,d)}).map(function(t){return {t:t,d:d,done:isDone(t,d)}}).sort(tSort)}
+function tRow(o){var t=o.t,d=o.d,done=o.done,tp=tTipo(t),hb=tHab(t),col=hb?'var(--'+hb+')':tp==='trabajo'?'var(--tra)':tp==='compras'?'var(--com)':'var(--mu)',id=esc(t.id),key=esc(t.id+'|'+d),pr=t.prio||'normal';
+ var meta=[t.hora?t.hora+' · '+hm(t.dur||30):'Todo el día',t.rep?'🔁 '+REP_TXT[t.rep]:'',(t.aviso!==''&&t.aviso!=null)?'⏰':'',hb?C(hb).n:TIPOS[tp]||'Tarea',money(t.precio,t.mon),t.nota].filter(Boolean).map(esc).join(' · ');
  var badge=pr==='normal'?'':'<span class="pr '+pr+'">'+(pr==='urgente'?'Urgente':'Importante')+'</span>';
- var h='<div class="trow p-'+pr+(t.done?' done':'')+'" style="--c:'+col+'"><button class="ck" type="button" data-tt="'+id+'" aria-label="'+(t.done?'Marcar como pendiente':'Marcar como hecha')+'"></button><div class="tx"><div class="t1">'+badge+esc(t.txt)+'</div><div class="t2">'+meta+'</div></div><button class="ib" type="button" data-te="'+id+'" aria-label="Editar tarea">✎</button><button class="ib" type="button" data-tc="'+id+'" aria-label="Agregar al calendario">📅</button><button class="x" type="button" data-td="'+id+'" aria-label="Eliminar tarea">×</button></div>';
- if(openCal===t.id){var u=calLinks(t);h+='<div class="sheet"><a href="'+u.g+'" target="_blank" rel="noopener">Google<small>Calendar</small></a><a href="'+u.o+'" target="_blank" rel="noopener">Outlook<small>Microsoft</small></a><button type="button" data-ics="'+id+'">iPhone<small>Calendario .ics</small></button></div>'}
+ var h='<div class="trow p-'+pr+(done?' done':'')+'" style="--c:'+col+'"><button class="ck" type="button" data-tt="'+key+'" aria-label="'+(done?'Marcar como pendiente':'Marcar como hecha')+'"></button><div class="tx"><div class="t1">'+badge+esc(t.txt)+'</div><div class="t2">'+meta+'</div></div><button class="ib" type="button" data-te="'+id+'" aria-label="Editar tarea">✎</button><button class="ib" type="button" data-tc="'+key+'" aria-label="Agregar al calendario">📅</button><button class="x" type="button" data-td="'+id+'" aria-label="'+(t.rep?'Eliminar la serie':'Eliminar tarea')+'">×</button></div>';
+ if(openCal===t.id+'|'+d){var u=calLinks(t,d);h+='<div class="sheet"><a href="'+u.g+'" target="_blank" rel="noopener">Google<small>Calendar</small></a><a href="'+u.o+'" target="_blank" rel="noopener">Outlook<small>'+(t.rep?'solo este día':'Microsoft')+'</small></a><button type="button" data-ics="'+key+'">iPhone<small>Calendario .ics</small></button></div>'}
  return h}
 function renderTar(){
  $('tdl').textContent=dayLabel(tday);
- var l=T.filter(function(t){return t.date===tday}).sort(tSort),p=l.filter(function(t){return !t.done}).length;
- var tot={};l.forEach(function(t){if(!t.done&&tTipo(t)==='compras'&&t.precio!==''&&t.precio!=null&&!isNaN(+t.precio)){var m=t.mon||'PEN';tot[m]=(tot[m]||0)+(+t.precio)}});
+ var l=dayTasks(tday),p=l.filter(function(o){return !o.done}).length;
+ var tot={};l.forEach(function(o){var t=o.t;if(!o.done&&tTipo(t)==='compras'&&t.precio!==''&&t.precio!=null&&!isNaN(+t.precio)){var m=t.mon||'PEN';tot[m]=(tot[m]||0)+(+t.precio)}});
  var ts=Object.keys(tot).map(function(m){return money(tot[m],m)}).join(' + ');
  $('tcount').textContent=l.length?p+' de '+l.length+' pendientes'+(ts?' · Por comprar: '+ts:''):'';
  $('tasks').innerHTML=l.length?l.map(tRow).join(''):'<div class="empty">No tienes tareas para este día. Escribe la primera arriba y toca Agregar tarea.</div>';
 }
-function renderHoyTasks(){var l=T.filter(function(t){return t.date===TODAY}).sort(tSort);
+function renderHoyTasks(){var l=dayTasks(TODAY);
  $('hoyTasks').innerHTML=l.length?l.map(tRow).join(''):'<div class="empty">Sin tareas para hoy. Toca + Agregar para anotar lo que tienes que hacer.</div>'}
-function tTimes(t){var p=(t.hora||'00:00').split(':'),s=P(t.date);s.setHours(+p[0],+p[1],0,0);return [s,new Date(s.getTime()+(+t.dur||30)*6e4)]}
+function tTimes(t,d){var p=(t.hora||'00:00').split(':'),s=P(d||t.date);s.setHours(+p[0],+p[1],0,0);return [s,new Date(s.getTime()+(+t.dur||30)*6e4)]}
 function f8(d){return ymd(d).replace(/-/g,'')+'T'+pad(d.getHours())+pad(d.getMinutes())+'00'}
 function off(d){var o=-d.getTimezoneOffset(),s=o<0?'-':'+';o=Math.abs(o);return s+pad(Math.floor(o/60))+':'+pad(o%60)}
 function iso(d){return ymd(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00'+off(d)}
-function calLinks(t){var E=encodeURIComponent,det=E((t.nota?t.nota+'\n':'')+'Desde Mis hábitos'),g,o;
- if(t.hora){var x=tTimes(t);g='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+E(t.txt)+'&dates='+f8(x[0])+'/'+f8(x[1])+'&ctz='+E(TZ)+'&details='+det;
-  o='https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject='+E(t.txt)+'&startdt='+E(iso(x[0]))+'&enddt='+E(iso(x[1]))+'&body='+det}
- else{var a=t.date.replace(/-/g,''),b=ymd(add(P(t.date),1));g='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+E(t.txt)+'&dates='+a+'/'+b.replace(/-/g,'')+'&details='+det;
-  o='https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&allday=true&subject='+E(t.txt)+'&startdt='+t.date+'&enddt='+b+'&body='+det}
+function rrule(t){var m={diario:'FREQ=DAILY',laborables:'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR',semanal:'FREQ=WEEKLY',quincenal:'FREQ=WEEKLY;INTERVAL=2',mensual:'FREQ=MONTHLY',anual:'FREQ=YEARLY'}[t.rep];if(!m)return '';return 'RRULE:'+m+(t.fin?';UNTIL='+t.fin.replace(/-/g,'')+'T235959Z':'')}
+function calLinks(t,d){var E=encodeURIComponent,det=E((t.nota?t.nota+'\n':'')+'Desde Mis hábitos'),g,o,gd=t.rep?t.date:d,rr=rrule(t);
+ if(t.hora){var x=tTimes(t,gd),y=tTimes(t,d);g='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+E(t.txt)+'&dates='+f8(x[0])+'/'+f8(x[1])+'&ctz='+E(TZ)+'&details='+det;
+  o='https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&subject='+E(t.txt)+'&startdt='+E(iso(y[0]))+'&enddt='+E(iso(y[1]))+'&body='+det}
+ else{var a=gd.replace(/-/g,''),b=ymd(add(P(gd),1)),b2=ymd(add(P(d),1));g='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+E(t.txt)+'&dates='+a+'/'+b.replace(/-/g,'')+'&details='+det;
+  o='https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&allday=true&subject='+E(t.txt)+'&startdt='+d+'&enddt='+b2+'&body='+det}
+ if(rr)g+='&recur='+E(rr);
  return {g:g,o:o}}
 function icsEsc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n')}
 function ics(t){var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Mis habitos//ES','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:'+t.id+'@mis-habitos','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z','SUMMARY:'+icsEsc(t.txt)];
  if(t.hora){var x=tTimes(t);L.push('DTSTART:'+f8(x[0]),'DTEND:'+f8(x[1]))}else L.push('DTSTART;VALUE=DATE:'+t.date.replace(/-/g,''),'DTEND;VALUE=DATE:'+ymd(add(P(t.date),1)).replace(/-/g,''));
+ var rr=rrule(t);if(rr)L.push(rr);
  if(t.nota)L.push('DESCRIPTION:'+icsEsc(t.nota));
- if(t.hora)L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(t.txt),'TRIGGER:-PT10M','END:VALARM');
+ if(t.aviso!==''&&t.aviso!=null)L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(t.txt),'TRIGGER:'+(+t.aviso?'-PT'+(+t.aviso)+'M':'PT0M'),'END:VALARM');
  L.push('END:VEVENT','END:VCALENDAR');return L.join('\r\n')+'\r\n'}
 function getT(id){return T.filter(function(t){return t.id===id})[0]}
 async function patchT(id,p){var t=getT(id);if(!t)return;
  if(db){try{await db.collection('tareas').doc(id).update(p)}catch(e){toast('No se pudo actualizar la tarea');return}}
  else{for(var k in p)t[k]=p[k];render()}}
-async function toggleT(id){var t=getT(id);if(!t)return;var nd=!t.done,p={done:nd},hb=tHab(t);
- if(hb&&nd&&!t.ses){var sid=await addRec({cat:hb,act:t.txt,min:+t.dur||30,date:t.date,nota:'Tarea'});if(sid)p.ses=sid}
- if(!nd&&t.ses){await delRec(t.ses);p.ses=''}
+async function toggleT(key){var i=key.lastIndexOf('|'),id=key.slice(0,i),d=key.slice(i+1),t=getT(id);if(!t)return;var hb=tHab(t),nd,p;
+ if(t.rep){var hs=(t.hechos||[]).slice(),sm=(t.sesMap||[]).slice(),cur=sm.filter(function(x){return x.indexOf(d+'|')===0})[0];nd=hs.indexOf(d)<0;
+  if(nd){hs.push(d);if(hb&&!cur){var sid=await addRec({cat:hb,act:t.txt,min:+t.dur||30,date:d,nota:'Tarea'});if(sid)sm.push(d+'|'+sid)}}
+  else{hs=hs.filter(function(x){return x!==d});if(cur){await delRec(cur.split('|')[1]);sm=sm.filter(function(x){return x!==cur})}}
+  p={hechos:hs,sesMap:sm}}
+ else{nd=!t.done;p={done:nd};
+  if(hb&&nd&&!t.ses){var sid2=await addRec({cat:hb,act:t.txt,min:+t.dur||30,date:t.date,nota:'Tarea'});if(sid2)p.ses=sid2}
+  if(!nd&&t.ses){await delRec(t.ses);p.ses=''}}
  await patchT(id,p);if(nd)toast(hb?'Hecha · +'+(t.dur||30)+' min de '+C(hb).n:'Tarea hecha')}
 async function patchS(id,p){var s=S.filter(function(x){return x.id===id})[0];if(!s)return false;
  if(db){try{await db.collection('sesiones').doc(id).update(p)}catch(e){toast('No se pudo guardar el cambio');return false}}else{for(var k in p)s[k]=p[k];render()}return true}
@@ -458,16 +496,19 @@ function openOv(html,onSave){var o=$('ov');o.innerHTML='<form class="dlg" id="dl
  $('dlg').onsubmit=async function(e){e.preventDefault();$('dsave').disabled=true;var ok=await onSave();if(ok===false){$('dsave').disabled=false;return}closeOv();render()}}
 function editT(id){var t=getT(id);if(!t)return;var tp=tTipo(t),durs=[15,30,45,60,90,120,180].map(function(n){return [String(n),hm(n)]});
  if(durs.every(function(d){return d[0]!==String(t.dur||30)}))durs.push([String(t.dur),hm(t.dur)]);
- openOv('<h2>Editar tarea</h2>'+fld('e_txt','Tarea','<input id="e_txt" type="text" value="'+esc(t.txt)+'" required>')+
-  '<div class="two">'+fld('e_date','Fecha','<input id="e_date" type="date" value="'+esc(t.date)+'" required>')+fld('e_hora','Hora','<input id="e_hora" type="time" value="'+esc(t.hora||'')+'">')+'</div>'+
-  '<div class="two">'+fld('e_dur','Duración','<select id="e_dur">'+selOpts(durs,String(t.dur||30))+'</select>')+fld('e_tipo','Tipo','<select id="e_tipo">'+selOpts(TIPO_OPTS,tp)+'</select>')+'</div>'+
-  '<div class="two">'+fld('e_prio','Prioridad','<select id="e_prio">'+selOpts(PRIO_OPTS,t.prio||'normal')+'</select>')+'<div class="fld" id="e_pf"'+(tp==='compras'?'':' hidden')+'><label class="lab" for="e_precio">Precio</label><div class="money"><select id="e_mon" aria-label="Moneda">'+selOpts([['PEN','S/'],['USD','US$']],t.mon||'PEN')+'</select><input id="e_precio" type="number" min="0" step="0.01" inputmode="decimal" value="'+(t.precio===''||t.precio==null?'':esc(t.precio))+'"></div></div></div>'+
+ openOv('<h2>Editar tarea'+(t.rep?' (toda la serie)':'')+'</h2>'+fld('e_txt','Tarea','<input id="e_txt" type="text" value="'+esc(t.txt)+'" required>')+
+  '<div class="two">'+fld('e_date',t.rep?'Empieza':'Fecha','<input id="e_date" type="date" value="'+esc(t.date)+'" required>')+fld('e_hora','Hora','<input id="e_hora" type="time" value="'+esc(t.hora||'')+'">')+'</div>'+
+  '<div class="two">'+fld('e_rep','Repetir','<select id="e_rep">'+selOpts(REP_OPTS,t.rep||'')+'</select>')+'<div class="fld" id="e_finF"'+(t.rep?'':' hidden')+'><label class="lab" for="e_fin">Termina (opcional)</label><input id="e_fin" type="date" value="'+esc(t.fin||'')+'"></div></div>'+
+  '<div class="two">'+fld('e_dur','Duración','<select id="e_dur">'+selOpts(durs,String(t.dur||30))+'</select>')+fld('e_aviso','Aviso','<select id="e_aviso">'+selOpts(AVISO_OPTS,t.aviso==null?'':String(t.aviso))+'</select>')+'</div>'+
+  '<div class="two">'+fld('e_tipo','Tipo','<select id="e_tipo">'+selOpts(TIPO_OPTS,tp)+'</select>')+fld('e_prio','Prioridad','<select id="e_prio">'+selOpts(PRIO_OPTS,t.prio||'normal')+'</select>')+'</div>'+
+  '<div class="fld" id="e_pf"'+(tp==='compras'?'':' hidden')+'><label class="lab" for="e_precio">Precio</label><div class="money"><select id="e_mon" aria-label="Moneda">'+selOpts([['PEN','S/'],['USD','US$']],t.mon||'PEN')+'</select><input id="e_precio" type="number" min="0" step="0.01" inputmode="decimal" value="'+(t.precio===''||t.precio==null?'':esc(t.precio))+'"></div></div>'+
   fld('e_nota','Nota','<input id="e_nota" type="text" value="'+esc(t.nota||'')+'">'),
- async function(){var txt=$('e_txt').value.trim();if(!txt){$('e_txt').focus();return false}var ntp=$('e_tipo').value,hb=['ej','es','ju'].indexOf(ntp)>=0?ntp:'';
-  var p={txt:txt,date:$('e_date').value||t.date,hora:$('e_hora').value||'',dur:+$('e_dur').value||30,tipo:ntp,cat:hb,prio:$('e_prio').value,nota:$('e_nota').value.trim(),precio:ntp==='compras'&&$('e_precio').value!==''?+$('e_precio').value:'',mon:$('e_mon').value};
-  if(t.done){if(t.ses&&hb)await patchS(t.ses,{cat:hb,act:txt,min:p.dur,date:p.date});else if(t.ses&&!hb){await delRec(t.ses);p.ses=''}else if(!t.ses&&hb){var sid=await addRec({cat:hb,act:txt,min:p.dur,date:p.date,nota:'Tarea'});if(sid)p.ses=sid}}
+ async function(){var txt=$('e_txt').value.trim();if(!txt){$('e_txt').focus();return false}var ntp=$('e_tipo').value,hb=['ej','es','ju'].indexOf(ntp)>=0?ntp:'',rep=$('e_rep').value;
+  var p={txt:txt,date:$('e_date').value||t.date,hora:$('e_hora').value||'',dur:+$('e_dur').value||30,tipo:ntp,cat:hb,prio:$('e_prio').value,nota:$('e_nota').value.trim(),precio:ntp==='compras'&&$('e_precio').value!==''?+$('e_precio').value:'',mon:$('e_mon').value,rep:rep,fin:rep?($('e_fin').value||''):'',aviso:$('e_aviso').value};
+  if(!t.rep&&!rep&&t.done){if(t.ses&&hb)await patchS(t.ses,{cat:hb,act:txt,min:p.dur,date:p.date});else if(t.ses&&!hb){await delRec(t.ses);p.ses=''}else if(!t.ses&&hb){var sid=await addRec({cat:hb,act:txt,min:p.dur,date:p.date,nota:'Tarea'});if(sid)p.ses=sid}}
   await patchT(id,p);toast('Tarea actualizada')});
- $('e_tipo').onchange=function(){$('e_pf').hidden=this.value!=='compras'}}
+ $('e_tipo').onchange=function(){$('e_pf').hidden=this.value!=='compras'};
+ $('e_rep').onchange=function(){$('e_finF').hidden=!this.value}}
 function editS(id){var s=S.filter(function(x){return x.id===id})[0];if(!s)return;
  openOv('<h2>Editar registro</h2>'+fld('e_cat','Hábito','<select id="e_cat">'+selOpts(CATS.map(function(c){return [c.k,c.i+' '+c.n]}),s.cat)+'</select>')+fld('e_act','Actividad','<input id="e_act" type="text" value="'+esc(s.act||'')+'" required>')+
   '<div class="two">'+fld('e_min','Minutos','<input id="e_min" type="number" min="1" max="600" inputmode="numeric" value="'+(+s.min||'')+'" required>')+fld('e_date','Fecha','<input id="e_date" type="date" value="'+esc(s.date)+'" required>')+'</div>'+
@@ -497,10 +538,10 @@ document.addEventListener('click',async function(e){
  else if(d.te){editT(d.te)}
  else if(d.se){editS(d.se)}
  else if(d.go){show(d.go);$('ttxt').focus()}
- else if(d.tn){tday=ymd(add(P(tday),+d.tn));openCal=null;renderTar()}
+ else if(d.tn){tday=ymd(add(P(tday),+d.tn));$('tfecha').value=tday;openCal=null;renderTar()}
  else if(d.tt){b.disabled=true;await toggleT(d.tt);b.disabled=false}
  else if(d.tc){openCal=openCal===d.tc?null:d.tc;render()}
- else if(d.ics){var t=getT(d.ics);if(!t)return;
+ else if(d.ics){var t=getT(d.ics.slice(0,d.ics.lastIndexOf('|')));if(!t)return;
   if(!dl&&window.HAB_API){var bl=new Blob([ics(t)],{type:'text/calendar'}),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=(t.txt.replace(/[^\wáéíóúñÁÉÍÓÚÑ ]+/g,'').trim().slice(0,40)||'tarea')+'.ics';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000);toast('Ábrelo para añadirlo a tu Calendario');return}
   if(!dl){toast('Abre la página desde claude.ai para guardar el archivo de calendario');return}
   try{await dl.save({filename:(t.txt.replace(/[^\wáéíóúñÁÉÍÓÚÑ ]+/g,'').trim().slice(0,40)||'tarea')+'.ics',data:ics(t)});toast('Ábrelo para añadirlo a tu Calendario')}catch(err){if(err&&err.code!=='declined')toast('No se pudo crear el archivo de calendario')}}
@@ -515,10 +556,15 @@ document.addEventListener('click',async function(e){
 });
 $('tform').onsubmit=async function(e){e.preventDefault();var txt=$('ttxt').value.trim();if(!txt){$('ttxt').focus();return}
  var tp=$('ttipo').value,hb=['ej','es','ju'].indexOf(tp)>=0?tp:'';
- var r={txt:txt,date:tday,hora:$('thora').value||'',dur:+$('tdur').value||30,tipo:tp,cat:hb,prio:$('tprio').value||'normal',precio:tp==='compras'&&$('tprecio').value!==''?+$('tprecio').value:'',mon:$('tmon').value,nota:$('tnota').value.trim(),done:false,ts:Date.now()};
+ var fe=$('tfecha').value||tday,rep=$('trep').value;
+ var r={txt:txt,date:fe,hora:$('thora').value||'',dur:+$('tdur').value||30,aviso:$('taviso').value,rep:rep,fin:rep?($('tfin').value||''):'',tipo:tp,cat:hb,prio:$('tprio').value||'normal',precio:tp==='compras'&&$('tprecio').value!==''?+$('tprecio').value:'',mon:$('tmon').value,nota:$('tnota').value.trim(),done:false,hechos:[],sesMap:[],ts:Date.now()};
+ if(fe!==tday){tday=fe}
  $('tsave').disabled=true;
  if(db){try{await db.collection('tareas').add(r)}catch(err){toast('No se pudo guardar la tarea');$('tsave').disabled=false;return}}else{r.id='t'+r.ts;T.push(r);render()}
- $('tsave').disabled=false;$('ttxt').value='';$('tnota').value='';$('thora').value='';$('tprecio').value='';$('tprio').value='normal';toast('Tarea agregada');$('ttxt').focus()};
+ $('tsave').disabled=false;$('ttxt').value='';$('tnota').value='';$('thora').value='';$('tprecio').value='';$('tprio').value='normal';$('trep').value='';$('tfin').value='';$('tfinR').hidden=true;$('ttipo').value='tarea';$('tprecioF').hidden=true;renderTar();toast(rep?'Tarea repetitiva agregada':'Tarea agregada');$('ttxt').focus()};
+$('tfecha').value=TODAY;
+$('trep').onchange=function(){$('tfinR').hidden=!this.value};
+$('calCopy').onclick=function(){var u=$('calLink').dataset.https||'';if(!u)return;try{navigator.clipboard.writeText(u).then(function(){toast('Enlace copiado')},function(){toast(u)})}catch(e){toast(u)}};
 // ---- Pasos y peso ----
 function mId(d){return 'medida-'+d.replace(/-/g,'')}
 function mOf(d){return M.filter(function(m){return m.date===d})[0]}
@@ -612,6 +658,7 @@ render();show(view);
 (async function(){
  if(window.HAB_API){
   try{db=await HAB_API.connect()}catch(e){$('mode').textContent='No se pudo conectar con tu hoja de Google: '+((e&&e.message)||e);return}
+  if(HAB_API.calUrl)HAB_API.calUrl().then(function(u){if(!u)return;$('calLink').href=u.replace(/^https:/,'webcal:');$('calLink').dataset.https=u;$('calSub').hidden=false}).catch(function(){});
   $('mode').textContent='Tus registros se guardan en tu hoja de Google.';
  }else{
   try{if(window.claude&&claude.use){claude.use('downloads').then(function(x){dl=x}).catch(function(){});db=await claude.use('db')}}catch(e){db=null}

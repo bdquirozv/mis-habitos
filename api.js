@@ -65,6 +65,13 @@
       document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh().catch(function () {}); });
       return { collection: col, doc: function (p) { var a = p.split('/'); return docRef(a[0], a[1]); } };
     },
+    // Enlace del calendario automático (suscripción iCloud / Google / Outlook)
+    calUrl: async function () {
+      if (!clave || !window.crypto || !crypto.subtle) return null;
+      var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('cal:' + clave));
+      var hex = Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('').slice(0, 24);
+      return C.API_URL + '?cal=' + hex;
+    },
     salir: function () { lss(KEY, null); location.reload(); }
   };
 })();

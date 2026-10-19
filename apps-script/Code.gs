@@ -12,8 +12,78 @@ const CLAVE = 'cambia-esta-clave';
 const COLECCIONES = ['sesiones', 'tareas', 'config'];
 const ENCABEZADO = ['id', 'fecha', 'resumen', 'datos', 'actualizado'];
 
-function doGet() {
-  return salida_({ ok: true, mensaje: 'Mis hábitos: el servidor funciona' });
+function doGet(e) {
+  var p = (e && e.parameter) || {};
+  if (p.cal) {
+    if (String(p.cal) !== tokenCal_()) return ContentService.createTextOutput('No autorizado');
+    return ContentService.createTextOutput(calendario_()).setMimeType(ContentService.MimeType.ICAL);
+  }
+  return salida_({ ok: true, mensaje: 'Mis hábitos: el servidor funciona', calendario: true });
+}
+
+// ---------- calendario automático (iCloud / Google / Outlook se suscriben a este enlace) ----------
+const ZONA = 'America/Lima';
+
+function tokenCal_() {
+  if (CLAVE === 'cambia-esta-clave') return '__sin_clave__';
+  var b = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, 'cal:' + CLAVE, Utilities.Charset.UTF_8);
+  return b.map(function (x) { return ('0' + (x & 255).toString(16)).slice(-2); }).join('').slice(0, 24);
+}
+
+function icsTxt_(s) {
+  return String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+}
+
+function plegar_(linea) {
+  var out = [], s = linea;
+  while (s.length > 70) { out.push(s.slice(0, 70)); s = ' ' + s.slice(70); }
+  out.push(s);
+  return out.join('\r\n');
+}
+
+function rrule_(t) {
+  var m = { diario: 'FREQ=DAILY', laborables: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', semanal: 'FREQ=WEEKLY', quincenal: 'FREQ=WEEKLY;INTERVAL=2', mensual: 'FREQ=MONTHLY', anual: 'FREQ=YEARLY' }[t.rep];
+  if (!m) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t.fin || '')) m += ';UNTIL=' + t.fin.replace(/-/g, '') + 'T235959Z';
+  return 'RRULE:' + m;
+}
+
+function calendario_() {
+  var L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Mis habitos//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'X-WR-CALNAME:Mis hábitos', 'X-WR-TIMEZONE:' + ZONA, 'REFRESH-INTERVAL;VALUE=DURATION:PT15M', 'X-PUBLISHED-TTL:PT15M',
+    'BEGIN:VTIMEZONE', 'TZID:' + ZONA, 'BEGIN:STANDARD', 'DTSTART:19700101T000000', 'TZOFFSETFROM:-0500', 'TZOFFSETTO:-0500', 'TZNAME:-05', 'END:STANDARD', 'END:VTIMEZONE'];
+  var stamp = Utilities.formatDate(new Date(), 'UTC', "yyyyMMdd'T'HHmmss'Z'");
+  var tareas = leerTodo_().tareas || {};
+  Object.keys(tareas).forEach(function (id) {
+    var t = tareas[id];
+    if (!t || !/^\d{4}-\d{2}-\d{2}$/.test(t.date || '')) return;
+    var y = +t.date.slice(0, 4), mo = +t.date.slice(5, 7), d = +t.date.slice(8, 10);
+    var pre = (!t.rep && t.done ? '✓ ' : '') + (t.prio === 'urgente' ? '🔴 ' : t.prio === 'importante' ? '🟠 ' : '');
+    L.push('BEGIN:VEVENT', 'UID:' + id + '@mis-habitos', 'DTSTAMP:' + stamp, plegar_('SUMMARY:' + icsTxt_(pre + (t.txt || 'Tarea'))));
+    if (/^\d{2}:\d{2}$/.test(t.hora || '')) {
+      var ini = new Date(Date.UTC(y, mo - 1, d, +t.hora.slice(0, 2), +t.hora.slice(3, 5)));
+      var fin = new Date(ini.getTime() + (Number(t.dur) || 30) * 60000);
+      L.push('DTSTART;TZID=' + ZONA + ':' + Utilities.formatDate(ini, 'UTC', "yyyyMMdd'T'HHmmss"),
+             'DTEND;TZID=' + ZONA + ':' + Utilities.formatDate(fin, 'UTC', "yyyyMMdd'T'HHmmss"));
+    } else {
+      var sig = new Date(Date.UTC(y, mo - 1, d + 1));
+      L.push('DTSTART;VALUE=DATE:' + t.date.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + Utilities.formatDate(sig, 'UTC', 'yyyyMMdd'));
+    }
+    var rr = rrule_(t);
+    if (rr) L.push(rr);
+    var tipos = { tarea: 'Tarea', trabajo: 'Trabajo', compras: 'Compras', ej: 'Ejercicio', es: 'Estudio', ju: 'Juegos' };
+    var desc = [tipos[t.tipo || t.cat] || 'Tarea'];
+    if (t.precio !== '' && t.precio != null && !isNaN(Number(t.precio))) desc.push((t.mon === 'USD' ? 'US$ ' : 'S/ ') + Number(t.precio).toFixed(2));
+    if (t.nota) desc.push(t.nota);
+    L.push(plegar_('DESCRIPTION:' + icsTxt_(desc.join(' · '))));
+    if (t.aviso !== '' && t.aviso != null && !isNaN(Number(t.aviso))) {
+      var n = Number(t.aviso);
+      L.push('BEGIN:VALARM', 'ACTION:DISPLAY', plegar_('DESCRIPTION:' + icsTxt_(t.txt || 'Tarea')), 'TRIGGER:' + (n ? '-PT' + n + 'M' : 'PT0M'), 'END:VALARM');
+    }
+    L.push('END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return L.join('\r\n') + '\r\n';
 }
 
 function doPost(e) {
