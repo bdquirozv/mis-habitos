@@ -143,6 +143,23 @@ input,select{border:0;background:var(--soft);border-radius:10px}
 .dnav .dt{font-weight:600;text-align:center}
 .date{text-transform:none!important}.date::first-letter{text-transform:uppercase}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+:root{--urg:#ff453a;--imp:#ff9f0a;--nor:#0a84ff;--tra:#bf5af2;--com:#ffd60a}
+.wkn{font-weight:700;font-size:17px}
+.trow{border-top:0!important;padding:10px 12px;border-radius:12px;margin-top:6px}
+.tlist>.trow:first-child{margin-top:0}
+.p-urgente{background:color-mix(in srgb,var(--urg) 20%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--urg) 45%,transparent)}
+.p-importante{background:color-mix(in srgb,var(--imp) 14%,transparent)}
+.p-normal{background:color-mix(in srgb,var(--nor) 10%,transparent)}
+.trow.done{background:var(--soft);box-shadow:none;opacity:.65}
+.pr{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;margin-right:6px;vertical-align:1px;color:#000}
+.pr.urgente{background:var(--urg)}.pr.importante{background:var(--imp)}
+.trow .ib{padding:6px 9px}
+.money{display:grid;grid-template-columns:76px 1fr;gap:6px}
+.sheet{padding:6px 0 4px}
+.ov{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.dlg{background:var(--card);border-radius:18px;width:100%;max-width:520px;max-height:88vh;overflow:auto;padding:16px;display:grid;gap:12px;box-shadow:0 0 0 .5px #3a3a3c}
+.dlg .ib{padding:13px;font-size:15px}
+@media (min-width:600px){.ov{align-items:center}}
 @media (max-width:420px){.three{grid-template-columns:1fr 1fr}.three .fld:last-child{grid-column:1/-1}.sheet{padding-left:0}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -157,13 +174,17 @@ input,select{border:0;background:var(--soft);border-radius:10px}
  </nav>
 
  <section class="view" id="v-hoy">
+  <div class="panel">
+   <div class="dnav"><button type="button" data-wn="-1" aria-label="Semana anterior">‹</button><div class="dt"><div class="wkn" id="wkn"></div><div class="t2" id="wkr" style="color:var(--mu);font-size:13px;font-weight:500"></div></div><button type="button" data-wn="1" aria-label="Semana siguiente">›</button></div>
+   <button type="button" class="ib" id="wnow" data-wn="0" hidden style="justify-self:center">Volver a esta semana</button>
+  </div>
   <div class="cats" id="cats"></div>
   <div class="panel">
    <div class="ph"><h2>Tareas de hoy</h2><button class="ib" type="button" data-go="tar">+ Agregar</button></div>
    <div class="tlist" id="hoyTasks"></div>
   </div>
   <div class="panel">
-   <div class="ph"><h2>Esta semana</h2><span class="wk">lun – dom</span></div>
+   <div class="ph"><h2 id="stripT">Esta semana</h2><span class="wk" id="stripS">lun – dom</span></div>
    <div class="strip" id="strip"></div>
   </div>
   <div class="panel">
@@ -181,11 +202,15 @@ input,select{border:0;background:var(--soft);border-radius:10px}
    <div class="three">
     <div class="fld"><label class="lab" for="thora">Hora (opcional)</label><input id="thora" type="time"></div>
     <div class="fld"><label class="lab" for="tdur">Duración</label><select id="tdur"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">1 h</option><option value="90">1 h 30</option><option value="120">2 h</option><option value="180">3 h</option></select></div>
-    <div class="fld"><label class="lab" for="tcat">Hábito</label><select id="tcat"><option value="">Ninguno</option><option value="ej">Ejercicio</option><option value="es">Estudio</option><option value="ju">Juegos</option></select></div>
+    <div class="fld"><label class="lab" for="ttipo">Tipo</label><select id="ttipo"><option value="tarea">📝 Tarea</option><option value="trabajo">💼 Trabajo</option><option value="compras">🛒 Compras</option><optgroup label="Hábito (suma minutos)"><option value="ej">🏃 Ejercicio</option><option value="es">📚 Estudio</option><option value="ju">🎮 Juegos</option></optgroup></select></div>
+   </div>
+   <div class="two">
+    <div class="fld"><label class="lab" for="tprio">Prioridad</label><select id="tprio"><option value="urgente">🔴 Urgente</option><option value="importante">🟠 Importante</option><option value="normal" selected>🔵 Normal</option></select></div>
+    <div class="fld" id="tprecioF" hidden><label class="lab" for="tprecio">Precio</label><div class="money"><select id="tmon" aria-label="Moneda"><option value="PEN">S/</option><option value="USD">US$</option></select><input id="tprecio" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></div></div>
    </div>
    <div class="fld"><label class="lab" for="tnota">Nota (opcional)</label><input id="tnota" type="text" placeholder="Lugar, detalle o enlace"></div>
    <button class="go" id="tsave" type="submit">Agregar tarea</button>
-   <div class="t2" style="color:var(--mu);font-size:12px">Si eliges un hábito, al marcar la tarea como hecha se suma a tus minutos de ese hábito.</div>
+   <div class="t2" style="color:var(--mu);font-size:12px">Si el tipo es Ejercicio, Estudio o Juegos, al marcarla como hecha se suma a tus minutos de ese hábito.</div>
   </form>
   <div class="panel">
    <div class="ph"><h2>Pendientes</h2><span class="wk" id="tcount"></span></div>
@@ -235,6 +260,7 @@ input,select{border:0;background:var(--soft);border-radius:10px}
  <p class="note" id="mode">Conectando…</p>
 </main>
 <div class="toast" id="toast" hidden></div>
+<div class="ov" id="ov" hidden></div>
 
 <script src="config.js"></script>
 <script src="api.js"></script>
@@ -264,9 +290,14 @@ function daysRange(k,a,b){var o={};S.forEach(function(x){if(x.cat===k&&x.date>=a
 function streak(k){var set={};S.forEach(function(x){if(x.cat===k)set[x.date]=1});var d=new Date();if(!set[ymd(d)])d=add(d,-1);var n=0;while(set[ymd(d)]){n++;d=add(d,-1)}return n}
 function best(k){var ds=Object.keys(S.reduce(function(o,x){if(x.cat===k)o[x.date]=1;return o},{})).sort();var b=0,c=0,prev=null;ds.forEach(function(d){c=prev&&ymd(add(P(prev),1))===d?c+1:1;b=Math.max(b,c);prev=d});return b}
 
+function isoWeek(d){var t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),dy=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-dy);var y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7)}
+var wOff=0;
 function renderHoy(){
- var ws=wStart(new Date()),a=ymd(ws),b=ymd(add(ws,6));
- $('wkl').textContent='Semana del '+sh(ws,{day:'numeric',month:'short'});
+ var ws=add(wStart(new Date()),7*wOff),a=ymd(ws),b=ymd(add(ws,6)),wn=isoWeek(ws),rg=sh(ws,{day:'numeric',month:'short'})+' – '+sh(add(ws,6),{day:'numeric',month:'short'});
+ $('wkl').textContent='Semana '+isoWeek(new Date())+' del año';
+ $('wkn').textContent='Semana '+wn+(wOff===0?' · esta semana':wOff===-1?' · semana pasada':wOff===1?' · próxima semana':'');
+ $('wkr').textContent=rg+' '+ws.getFullYear();
+ $('wnow').hidden=wOff===0;$('stripT').textContent='Semana '+wn;$('stripS').textContent=rg;
  $('cats').innerHTML=CATS.map(function(c){
   var g=cfg[c.k],m=sumRange(c.k,a,b),dd=daysRange(c.k,a,b),pct=g.min?Math.min(100,m/g.min*100):0,st=streak(c.k),pill;
   if(g.modo==='limite'){var r=g.min?m/g.min:0;pill=r>1?'<span class="pill bad">Pasaste el límite</span>':r>=.8?'<span class="pill warn">Cerca del límite</span>':'<span class="pill ok">Dentro del límite</span>'}
@@ -285,7 +316,7 @@ function renderHoy(){
  $('todayList').innerHTML=t.length?t.map(rowH).join(''):'<div class="empty">Todavía no registras nada hoy. Usa los botones +15, +30 o +60 de cada tarjeta, o la pestaña Registrar.</div>';
 }
 function rowH(x){var c=C(x.cat),f=['','Me costó','Normal','Muy bien'][+x.sens||0];
- return '<div class="row" style="--c:var(--'+c.k+')"><span class="sw"></span><div class="tx"><div class="t1">'+esc(x.act||c.n)+'</div><div class="t2">'+[c.n,x.date!==TODAY?sh(P(x.date),{weekday:'short',day:'numeric',month:'short'}):'',f,x.nota].filter(Boolean).map(esc).join(' · ')+'</div></div><span class="mn">'+hm(x.min)+'</span><button class="x" type="button" data-x="'+esc(x.id)+'" aria-label="Eliminar">×</button></div>'}
+ return '<div class="row" style="--c:var(--'+c.k+')"><span class="sw"></span><div class="tx"><div class="t1">'+esc(x.act||c.n)+'</div><div class="t2">'+[c.n,x.date!==TODAY?sh(P(x.date),{weekday:'short',day:'numeric',month:'short'}):'',f,x.nota].filter(Boolean).map(esc).join(' · ')+'</div></div><span class="mn">'+hm(x.min)+'</span><button class="x" type="button" data-se="'+esc(x.id)+'" aria-label="Editar registro">✎</button><button class="x" type="button" data-x="'+esc(x.id)+'" aria-label="Eliminar">×</button></div>'}
 
 function renderReg(){
  $('segCat').innerHTML=CATS.map(function(c){return '<button type="button" style="--c:var(--'+c.k+')" data-c="'+c.k+'" class="'+(c.k===cat?'on':'')+'">'+c.i+' '+c.n+'</button>'}).join('');
@@ -341,16 +372,25 @@ function renderAju(){
 var T=[],tday=TODAY,openCal=null,dl=null;
 var TZ=(function(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Lima'}catch(e){return 'America/Lima'}})();
 function dayLabel(s){var n=Math.round((P(s)-P(TODAY))/864e5);var w=sh(P(s),{weekday:'long',day:'numeric',month:'long'});return n===0?'Hoy · '+w:n===1?'Mañana · '+w:n===-1?'Ayer · '+w:w}
-function tSort(a,b){if(!!a.done!==!!b.done)return a.done?1:-1;var x=a.hora||'99',y=b.hora||'99';return x<y?-1:x>y?1:(a.ts||0)-(b.ts||0)}
-function tRow(t){var c=t.cat?C(t.cat):null,col=c?'var(--'+c.k+')':'var(--mu)',id=esc(t.id);
- var meta=[t.hora?t.hora+' · '+hm(t.dur||30):'Todo el día',c?c.n:'',t.nota].filter(Boolean).map(esc).join(' · ');
- var h='<div class="trow'+(t.done?' done':'')+'" style="--c:'+col+'"><button class="ck" type="button" data-tt="'+id+'" aria-label="'+(t.done?'Marcar como pendiente':'Marcar como hecha')+'"></button><div class="tx"><div class="t1">'+esc(t.txt)+'</div><div class="t2">'+meta+'</div></div><button class="ib" type="button" data-tc="'+id+'">📅</button><button class="x" type="button" data-td="'+id+'" aria-label="Eliminar tarea">×</button></div>';
+var TIPOS={tarea:'Tarea',trabajo:'Trabajo',compras:'Compras'},PRORD={urgente:0,importante:1,normal:2};
+var TIPO_OPTS=[['tarea','📝 Tarea'],['trabajo','💼 Trabajo'],['compras','🛒 Compras'],['ej','🏃 Ejercicio'],['es','📚 Estudio'],['ju','🎮 Juegos']];
+var PRIO_OPTS=[['urgente','🔴 Urgente'],['importante','🟠 Importante'],['normal','🔵 Normal']];
+function tTipo(t){return t.tipo||t.cat||'tarea'}
+function tHab(t){var x=tTipo(t);return ['ej','es','ju'].indexOf(x)>=0?x:''}
+function money(v,m){if(v===''||v==null||isNaN(+v))return '';return (m==='USD'?'US$ ':'S/ ')+(+v).toFixed(2)}
+function tSort(a,b){if(!!a.done!==!!b.done)return a.done?1:-1;var pa=PRORD[a.prio||'normal'],pb=PRORD[b.prio||'normal'];if(pa!==pb)return pa-pb;var x=a.hora||'99',y=b.hora||'99';return x<y?-1:x>y?1:(a.ts||0)-(b.ts||0)}
+function tRow(t){var tp=tTipo(t),hb=tHab(t),col=hb?'var(--'+hb+')':tp==='trabajo'?'var(--tra)':tp==='compras'?'var(--com)':'var(--mu)',id=esc(t.id),pr=t.prio||'normal';
+ var meta=[t.hora?t.hora+' · '+hm(t.dur||30):'Todo el día',hb?C(hb).n:TIPOS[tp]||'Tarea',money(t.precio,t.mon),t.nota].filter(Boolean).map(esc).join(' · ');
+ var badge=pr==='normal'?'':'<span class="pr '+pr+'">'+(pr==='urgente'?'Urgente':'Importante')+'</span>';
+ var h='<div class="trow p-'+pr+(t.done?' done':'')+'" style="--c:'+col+'"><button class="ck" type="button" data-tt="'+id+'" aria-label="'+(t.done?'Marcar como pendiente':'Marcar como hecha')+'"></button><div class="tx"><div class="t1">'+badge+esc(t.txt)+'</div><div class="t2">'+meta+'</div></div><button class="ib" type="button" data-te="'+id+'" aria-label="Editar tarea">✎</button><button class="ib" type="button" data-tc="'+id+'" aria-label="Agregar al calendario">📅</button><button class="x" type="button" data-td="'+id+'" aria-label="Eliminar tarea">×</button></div>';
  if(openCal===t.id){var u=calLinks(t);h+='<div class="sheet"><a href="'+u.g+'" target="_blank" rel="noopener">Google<small>Calendar</small></a><a href="'+u.o+'" target="_blank" rel="noopener">Outlook<small>Microsoft</small></a><button type="button" data-ics="'+id+'">iPhone<small>Calendario .ics</small></button></div>'}
  return h}
 function renderTar(){
  $('tdl').textContent=dayLabel(tday);
  var l=T.filter(function(t){return t.date===tday}).sort(tSort),p=l.filter(function(t){return !t.done}).length;
- $('tcount').textContent=l.length?p+' de '+l.length+' pendientes':'';
+ var tot={};l.forEach(function(t){if(!t.done&&tTipo(t)==='compras'&&t.precio!==''&&t.precio!=null&&!isNaN(+t.precio)){var m=t.mon||'PEN';tot[m]=(tot[m]||0)+(+t.precio)}});
+ var ts=Object.keys(tot).map(function(m){return money(tot[m],m)}).join(' + ');
+ $('tcount').textContent=l.length?p+' de '+l.length+' pendientes'+(ts?' · Por comprar: '+ts:''):'';
  $('tasks').innerHTML=l.length?l.map(tRow).join(''):'<div class="empty">No tienes tareas para este día. Escribe la primera arriba y toca Agregar tarea.</div>';
 }
 function renderHoyTasks(){var l=T.filter(function(t){return t.date===TODAY}).sort(tSort);
@@ -375,10 +415,37 @@ function getT(id){return T.filter(function(t){return t.id===id})[0]}
 async function patchT(id,p){var t=getT(id);if(!t)return;
  if(db){try{await db.collection('tareas').doc(id).update(p)}catch(e){toast('No se pudo actualizar la tarea');return}}
  else{for(var k in p)t[k]=p[k];render()}}
-async function toggleT(id){var t=getT(id);if(!t)return;var nd=!t.done,p={done:nd};
- if(t.cat&&nd&&!t.ses){var sid=await addRec({cat:t.cat,act:t.txt,min:+t.dur||30,date:t.date,nota:'Tarea'});if(sid)p.ses=sid}
+async function toggleT(id){var t=getT(id);if(!t)return;var nd=!t.done,p={done:nd},hb=tHab(t);
+ if(hb&&nd&&!t.ses){var sid=await addRec({cat:hb,act:t.txt,min:+t.dur||30,date:t.date,nota:'Tarea'});if(sid)p.ses=sid}
  if(!nd&&t.ses){await delRec(t.ses);p.ses=''}
- await patchT(id,p);if(nd)toast(t.cat?'Hecha · +'+(t.dur||30)+' min de '+C(t.cat).n:'Tarea hecha')}
+ await patchT(id,p);if(nd)toast(hb?'Hecha · +'+(t.dur||30)+' min de '+C(hb).n:'Tarea hecha')}
+async function patchS(id,p){var s=S.filter(function(x){return x.id===id})[0];if(!s)return false;
+ if(db){try{await db.collection('sesiones').doc(id).update(p)}catch(e){toast('No se pudo guardar el cambio');return false}}else{for(var k in p)s[k]=p[k];render()}return true}
+// ---- Edición ----
+function fld(id,l,inner){return '<div class="fld"><label class="lab" for="'+id+'">'+l+'</label>'+inner+'</div>'}
+function selOpts(list,val){return list.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===val?' selected':'')+'>'+esc(o[1])+'</option>'}).join('')}
+function closeOv(){$('ov').hidden=true;$('ov').innerHTML=''}
+function openOv(html,onSave){var o=$('ov');o.innerHTML='<form class="dlg" id="dlg">'+html+'<div class="two"><button type="button" class="ib" id="dcan">Cancelar</button><button class="go" type="submit" id="dsave">Guardar cambios</button></div></form>';o.hidden=false;
+ $('dcan').onclick=closeOv;o.onclick=function(e){if(e.target===o)closeOv()};
+ $('dlg').onsubmit=async function(e){e.preventDefault();$('dsave').disabled=true;var ok=await onSave();if(ok===false){$('dsave').disabled=false;return}closeOv();render()}}
+function editT(id){var t=getT(id);if(!t)return;var tp=tTipo(t),durs=[15,30,45,60,90,120,180].map(function(n){return [String(n),hm(n)]});
+ if(durs.every(function(d){return d[0]!==String(t.dur||30)}))durs.push([String(t.dur),hm(t.dur)]);
+ openOv('<h2>Editar tarea</h2>'+fld('e_txt','Tarea','<input id="e_txt" type="text" value="'+esc(t.txt)+'" required>')+
+  '<div class="two">'+fld('e_date','Fecha','<input id="e_date" type="date" value="'+esc(t.date)+'" required>')+fld('e_hora','Hora','<input id="e_hora" type="time" value="'+esc(t.hora||'')+'">')+'</div>'+
+  '<div class="two">'+fld('e_dur','Duración','<select id="e_dur">'+selOpts(durs,String(t.dur||30))+'</select>')+fld('e_tipo','Tipo','<select id="e_tipo">'+selOpts(TIPO_OPTS,tp)+'</select>')+'</div>'+
+  '<div class="two">'+fld('e_prio','Prioridad','<select id="e_prio">'+selOpts(PRIO_OPTS,t.prio||'normal')+'</select>')+'<div class="fld" id="e_pf"'+(tp==='compras'?'':' hidden')+'><label class="lab" for="e_precio">Precio</label><div class="money"><select id="e_mon" aria-label="Moneda">'+selOpts([['PEN','S/'],['USD','US$']],t.mon||'PEN')+'</select><input id="e_precio" type="number" min="0" step="0.01" inputmode="decimal" value="'+(t.precio===''||t.precio==null?'':esc(t.precio))+'"></div></div></div>'+
+  fld('e_nota','Nota','<input id="e_nota" type="text" value="'+esc(t.nota||'')+'">'),
+ async function(){var txt=$('e_txt').value.trim();if(!txt){$('e_txt').focus();return false}var ntp=$('e_tipo').value,hb=['ej','es','ju'].indexOf(ntp)>=0?ntp:'';
+  var p={txt:txt,date:$('e_date').value||t.date,hora:$('e_hora').value||'',dur:+$('e_dur').value||30,tipo:ntp,cat:hb,prio:$('e_prio').value,nota:$('e_nota').value.trim(),precio:ntp==='compras'&&$('e_precio').value!==''?+$('e_precio').value:'',mon:$('e_mon').value};
+  if(t.done){if(t.ses&&hb)await patchS(t.ses,{cat:hb,act:txt,min:p.dur,date:p.date});else if(t.ses&&!hb){await delRec(t.ses);p.ses=''}else if(!t.ses&&hb){var sid=await addRec({cat:hb,act:txt,min:p.dur,date:p.date,nota:'Tarea'});if(sid)p.ses=sid}}
+  await patchT(id,p);toast('Tarea actualizada')});
+ $('e_tipo').onchange=function(){$('e_pf').hidden=this.value!=='compras'}}
+function editS(id){var s=S.filter(function(x){return x.id===id})[0];if(!s)return;
+ openOv('<h2>Editar registro</h2>'+fld('e_cat','Hábito','<select id="e_cat">'+selOpts(CATS.map(function(c){return [c.k,c.i+' '+c.n]}),s.cat)+'</select>')+fld('e_act','Actividad','<input id="e_act" type="text" value="'+esc(s.act||'')+'" required>')+
+  '<div class="two">'+fld('e_min','Minutos','<input id="e_min" type="number" min="1" max="600" inputmode="numeric" value="'+(+s.min||'')+'" required>')+fld('e_date','Fecha','<input id="e_date" type="date" value="'+esc(s.date)+'" required>')+'</div>'+
+  '<div class="two">'+fld('e_sens','¿Cómo te fue?','<select id="e_sens">'+selOpts([['','—'],['3','Muy bien'],['2','Normal'],['1','Me costó']],String(s.sens||''))+'</select>')+fld('e_nota','Nota','<input id="e_nota" type="text" value="'+esc(s.nota||'')+'">')+'</div>',
+ async function(){var m=+$('e_min').value,a=$('e_act').value.trim();if(!a){$('e_act').focus();return false}if(!(m>0)){$('e_min').focus();return false}
+  var ok=await patchS(id,{cat:$('e_cat').value,act:a,min:m,date:$('e_date').value||s.date,sens:$('e_sens').value,nota:$('e_nota').value.trim()});if(ok)toast('Registro actualizado');return ok})}
 
 function render(){
  $('today').textContent=sh(new Date(),{weekday:'long',day:'numeric',month:'long'});
@@ -397,6 +464,9 @@ $('tabs').onclick=function(e){var b=e.target.closest('button');if(b)show(b.datas
 document.addEventListener('click',async function(e){
  var b=e.target.closest('button');if(!b)return;var d=b.dataset;
  if(d.q){var a=cfg[d.q].acts[0]||C(d.q).n;b.disabled=true;if(await addRec({cat:d.q,act:a,min:+d.n,date:TODAY}))toast('+'+d.n+' min de '+a);b.disabled=false}
+ else if(d.wn!=null){wOff=+d.wn===0?0:wOff+(+d.wn);renderHoy()}
+ else if(d.te){editT(d.te)}
+ else if(d.se){editS(d.se)}
  else if(d.go){show(d.go);$('ttxt').focus()}
  else if(d.tn){tday=ymd(add(P(tday),+d.tn));openCal=null;renderTar()}
  else if(d.tt){b.disabled=true;await toggleT(d.tt);b.disabled=false}
@@ -415,10 +485,13 @@ document.addEventListener('click',async function(e){
   var id=d.x;if(db){try{await db.collection('sesiones').doc(id).delete()}catch(err){toast('No se pudo borrar')}}else{S=S.filter(function(x){return x.id!==id});render()}}
 });
 $('tform').onsubmit=async function(e){e.preventDefault();var txt=$('ttxt').value.trim();if(!txt){$('ttxt').focus();return}
- var r={txt:txt,date:tday,hora:$('thora').value||'',dur:+$('tdur').value||30,cat:$('tcat').value||'',nota:$('tnota').value.trim(),done:false,ts:Date.now()};
+ var tp=$('ttipo').value,hb=['ej','es','ju'].indexOf(tp)>=0?tp:'';
+ var r={txt:txt,date:tday,hora:$('thora').value||'',dur:+$('tdur').value||30,tipo:tp,cat:hb,prio:$('tprio').value||'normal',precio:tp==='compras'&&$('tprecio').value!==''?+$('tprecio').value:'',mon:$('tmon').value,nota:$('tnota').value.trim(),done:false,ts:Date.now()};
  $('tsave').disabled=true;
  if(db){try{await db.collection('tareas').add(r)}catch(err){toast('No se pudo guardar la tarea');$('tsave').disabled=false;return}}else{r.id='t'+r.ts;T.push(r);render()}
- $('tsave').disabled=false;$('ttxt').value='';$('tnota').value='';$('thora').value='';toast('Tarea agregada');$('ttxt').focus()};
+ $('tsave').disabled=false;$('ttxt').value='';$('tnota').value='';$('thora').value='';$('tprecio').value='';$('tprio').value='normal';toast('Tarea agregada');$('ttxt').focus()};
+$('ttipo').onchange=function(){$('tprecioF').hidden=this.value!=='compras'};
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('ov').hidden)closeOv()});
 $('act').onchange=function(){$('actOther').hidden=this.value!=='__o'};
 $('min').oninput=function(){[].forEach.call($('minChips').children,function(c){c.classList.toggle('on',+c.dataset.m===+$('min').value)})};
 $('fecha').value=TODAY;$('fecha').max=TODAY;
