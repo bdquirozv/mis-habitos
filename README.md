@@ -26,6 +26,6 @@ Página para seguir mis hábitos de ejercicio, estudio y juegos, con metas seman
 Pega el nuevo código, vuelve a poner tu clave y crea una **nueva versión**: Implementar → Administrar implementaciones → ✏️ → Versión: Nueva versión → Implementar. La URL `/exec` no cambia.
 
 ## Calendario
-**Automático (iCloud):** en la pestaña Tareas toca **Suscribirme en iPhone** → Suscribirse. Todas las tareas con fecha (también las repetitivas) aparecen solas en el Calendario y se actualizan cada 15 min aprox. En iPhone puedes ajustar la frecuencia en Ajustes → Calendario → Cuentas → Obtener datos.
+**Botón 📲 Enviar al calendario** (pestaña Tareas, o 📲 Calendario en Hoy): crea un archivo `.ics` con tus tareas nuevas o cambiadas (hora, aviso y repetición). Ábrelo en el iPhone y toca **Agregar todo** para pasarlas al Calendario de iCloud. Solo se envía lo que aún no enviaste; "Enviar todas otra vez" las manda todas.
 
-**Manual:** En cada tarea, el botón 📅 abre Google Calendar u Outlook con el evento ya lleno, o descarga un archivo `.ics` que el iPhone abre en Calendario (con aviso 10 minutos antes).
+**Por tarea:** el botón 📅 de cada tarea abre Google Calendar u Outlook con el evento ya lleno, o descarga su `.ics`.

@@ -192,7 +192,7 @@ input,select{border:0;background:var(--soft);border-radius:10px}
   </div>
   <div class="cats" id="cats"></div>
   <div class="panel">
-   <div class="ph"><h2>Tareas de hoy</h2><button class="ib" type="button" data-go="tar">+ Agregar</button></div>
+   <div class="ph"><h2>Tareas de hoy</h2><div style="display:flex;gap:6px"><button class="ib" type="button" data-cal="nuevas" id="hoyCal" title="Enviar tareas nuevas al calendario">📲 Calendario</button><button class="ib" type="button" data-go="tar">+ Agregar</button></div></div>
    <div class="tlist" id="hoyTasks"></div>
   </div>
   <div class="panel">
@@ -230,10 +230,10 @@ input,select{border:0;background:var(--soft);border-radius:10px}
    <button class="go" id="tsave" type="submit">Agregar tarea</button>
    <div class="t2" style="color:var(--mu);font-size:12px">Si el tipo es Ejercicio, Estudio o Juegos, al marcarla como hecha se suma a tus minutos de ese hábito.</div>
   </form>
-  <div class="panel" id="calSub" hidden>
-   <div class="ph"><h2>📲 Calendario automático</h2></div>
-   <div class="t2" style="color:var(--mu);font-size:13px">Suscríbete una vez desde tu iPhone y todas tus tareas con fecha (también las que se repiten) aparecerán solas en tu Calendario de iCloud y se actualizarán cuando cambies algo.</div>
-   <div class="two"><a class="go" id="calLink" href="#" style="text-align:center;text-decoration:none">Suscribirme en iPhone</a><button type="button" class="ib" id="calCopy" style="padding:13px;font-size:15px">Copiar enlace</button></div>
+  <div class="panel" id="calBox">
+   <div class="ph"><h2>📲 Enviar al calendario</h2><span class="wk" id="calN"></span></div>
+   <div class="t2" style="color:var(--mu);font-size:13px">Cuando tú quieras, toca el botón: se crea un archivo con tus tareas nuevas o cambiadas (con su hora, aviso y repetición). Ábrelo en tu iPhone y toca <b>Agregar todo</b> para pasarlas a tu Calendario de iCloud.</div>
+   <div class="two"><button class="go" id="calSend" type="button" data-cal="nuevas">Enviar tareas nuevas</button><button class="ib" id="calAll" type="button" data-cal="todas" style="padding:13px;font-size:15px">Enviar todas otra vez</button></div>
   </div>
   <div class="panel">
    <div class="ph"><h2>Pendientes</h2><span class="wk" id="tcount"></span></div>
@@ -449,9 +449,10 @@ function renderTar(){
  var tot={};l.forEach(function(o){var t=o.t;if(!o.done&&tTipo(t)==='compras'&&t.precio!==''&&t.precio!=null&&!isNaN(+t.precio)){var m=t.mon||'PEN';tot[m]=(tot[m]||0)+(+t.precio)}});
  var ts=Object.keys(tot).map(function(m){return money(tot[m],m)}).join(' + ');
  $('tcount').textContent=l.length?p+' de '+l.length+' pendientes'+(ts?' · Por comprar: '+ts:''):'';
+ renderCalN();
  $('tasks').innerHTML=l.length?l.map(tRow).join(''):'<div class="empty">No tienes tareas para este día. Escribe la primera arriba y toca Agregar tarea.</div>';
 }
-function renderHoyTasks(){var l=dayTasks(TODAY);
+function renderHoyTasks(){var l=dayTasks(TODAY);renderCalN();
  $('hoyTasks').innerHTML=l.length?l.map(tRow).join(''):'<div class="empty">Sin tareas para hoy. Toca + Agregar para anotar lo que tienes que hacer.</div>'}
 function tTimes(t,d){var p=(t.hora||'00:00').split(':'),s=P(d||t.date);s.setHours(+p[0],+p[1],0,0);return [s,new Date(s.getTime()+(+t.dur||30)*6e4)]}
 function f8(d){return ymd(d).replace(/-/g,'')+'T'+pad(d.getHours())+pad(d.getMinutes())+'00'}
@@ -466,12 +467,25 @@ function calLinks(t,d){var E=encodeURIComponent,det=E((t.nota?t.nota+'\n':'')+'D
  if(rr)g+='&recur='+E(rr);
  return {g:g,o:o}}
 function icsEsc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n')}
-function ics(t){var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Mis habitos//ES','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:'+t.id+'@mis-habitos','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z','SUMMARY:'+icsEsc(t.txt)];
+function vevent(t){var pre=t.prio==='urgente'?'🔴 ':t.prio==='importante'?'🟠 ':'';var L=['BEGIN:VEVENT','UID:'+t.id+'@mis-habitos','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z','SUMMARY:'+icsEsc(pre+t.txt)];
  if(t.hora){var x=tTimes(t);L.push('DTSTART:'+f8(x[0]),'DTEND:'+f8(x[1]))}else L.push('DTSTART;VALUE=DATE:'+t.date.replace(/-/g,''),'DTEND;VALUE=DATE:'+ymd(add(P(t.date),1)).replace(/-/g,''));
  var rr=rrule(t);if(rr)L.push(rr);
- if(t.nota)L.push('DESCRIPTION:'+icsEsc(t.nota));
+ var desc=[TIPOS[tTipo(t)]||(tHab(t)?C(tHab(t)).n:'Tarea'),money(t.precio,t.mon),t.nota].filter(Boolean).join(' · ');if(desc)L.push('DESCRIPTION:'+icsEsc(desc));
  if(t.aviso!==''&&t.aviso!=null)L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(t.txt),'TRIGGER:'+(+t.aviso?'-PT'+(+t.aviso)+'M':'PT0M'),'END:VALARM');
- L.push('END:VEVENT','END:VCALENDAR');return L.join('\r\n')+'\r\n'}
+ L.push('END:VEVENT');return L}
+function icsMany(list){var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Mis habitos//ES','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Mis hábitos'];list.forEach(function(t){L=L.concat(vevent(t))});L.push('END:VCALENDAR');return L.join('\r\n')+'\r\n'}
+function ics(t){return icsMany([t])}
+function calSig(t){return [t.txt,t.date,t.hora||'',t.dur||'',t.rep||'',t.fin||'',t.aviso==null?'':t.aviso,t.nota||'',t.prio||'',t.precio==null?'':t.precio].join('|')}
+function calPend(all){return T.filter(function(t){if(!t.date)return false;if(!t.rep&&(t.done||t.date<TODAY))return false;if(t.rep&&t.fin&&t.fin<TODAY)return false;return all||t.enCal!==calSig(t)})}
+async function saveFile(name,data){
+ if(dl){try{await dl.save({filename:name,data:data});return true}catch(e){if(e&&e.code!=='declined')toast('No se pudo crear el archivo');return false}}
+ if(window.HAB_API){var bl=new Blob([data],{type:'text/calendar'}),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500);return true}
+ toast('Abre la página desde claude.ai o desde tu enlace de GitHub para crear el archivo');return false}
+async function sendCal(all){var l=calPend(all);if(!l.length){toast(all?'No hay tareas con fecha para enviar':'Tu calendario ya está al día');return}
+ if(!(await saveFile('mis-tareas-'+TODAY+'.ics',icsMany(l))))return;
+ for(var i=0;i<l.length;i++)await patchT(l[i].id,{enCal:calSig(l[i])});
+ toast(l.length+(l.length===1?' tarea lista':' tareas listas')+': abre el archivo y toca «Agregar todo»')}
+function renderCalN(){var n=calPend(false).length;$('calN').textContent=n?n+(n===1?' por enviar':' por enviar'):'Al día ✓';$('hoyCal').textContent=n?'📲 Calendario ('+n+')':'📲 Calendario'}
 function getT(id){return T.filter(function(t){return t.id===id})[0]}
 async function patchT(id,p){var t=getT(id);if(!t)return;
  if(db){try{await db.collection('tareas').doc(id).update(p)}catch(e){toast('No se pudo actualizar la tarea');return}}
@@ -535,6 +549,7 @@ document.addEventListener('click',async function(e){
  if(d.q){var a=cfg[d.q].acts[0]||C(d.q).n;b.disabled=true;if(await addRec({cat:d.q,act:a,min:+d.n,date:TODAY}))toast('+'+d.n+' min de '+a);b.disabled=false}
  else if(d.wn!=null){wOff=+d.wn===0?0:wOff+(+d.wn);renderHoy()}
  else if(d.gom){show('reg');setTimeout(function(){$('mform').scrollIntoView({behavior:'smooth',block:'start'});$('m_pasos').focus()},60)}
+ else if(d.cal){b.disabled=true;await sendCal(d.cal==='todas');b.disabled=false}
  else if(d.te){editT(d.te)}
  else if(d.se){editS(d.se)}
  else if(d.go){show(d.go);$('ttxt').focus()}
@@ -564,7 +579,6 @@ $('tform').onsubmit=async function(e){e.preventDefault();var txt=$('ttxt').value
  $('tsave').disabled=false;$('ttxt').value='';$('tnota').value='';$('thora').value='';$('tprecio').value='';$('tprio').value='normal';$('trep').value='';$('tfin').value='';$('tfinR').hidden=true;$('ttipo').value='tarea';$('tprecioF').hidden=true;renderTar();toast(rep?'Tarea repetitiva agregada':'Tarea agregada');$('ttxt').focus()};
 $('tfecha').value=TODAY;
 $('trep').onchange=function(){$('tfinR').hidden=!this.value};
-$('calCopy').onclick=function(){var u=$('calLink').dataset.https||'';if(!u)return;try{navigator.clipboard.writeText(u).then(function(){toast('Enlace copiado')},function(){toast(u)})}catch(e){toast(u)}};
 // ---- Pasos y peso ----
 function mId(d){return 'medida-'+d.replace(/-/g,'')}
 function mOf(d){return M.filter(function(m){return m.date===d})[0]}
@@ -658,7 +672,6 @@ render();show(view);
 (async function(){
  if(window.HAB_API){
   try{db=await HAB_API.connect()}catch(e){$('mode').textContent='No se pudo conectar con tu hoja de Google: '+((e&&e.message)||e);return}
-  if(HAB_API.calUrl)HAB_API.calUrl().then(function(u){if(!u)return;$('calLink').href=u.replace(/^https:/,'webcal:');$('calLink').dataset.https=u;$('calSub').hidden=false}).catch(function(){});
   $('mode').textContent='Tus registros se guardan en tu hoja de Google.';
  }else{
   try{if(window.claude&&claude.use){claude.use('downloads').then(function(x){dl=x}).catch(function(){});db=await claude.use('db')}}catch(e){db=null}
