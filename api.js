@@ -42,11 +42,11 @@
     return new Promise(function (res) {
       var o = document.createElement('div');
       o.style.cssText = 'position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:16px';
-      o.innerHTML = '<form style="background:#121212;color:#fff;border-radius:16px;padding:18px;width:100%;max-width:340px;display:grid;gap:10px;font-family:inherit">' +
+      o.innerHTML = '<form style="background:var(--card,#fff);color:var(--ink,#111);border-radius:22px;padding:18px;width:100%;max-width:340px;display:grid;gap:10px;font-family:inherit">' +
         '<div style="font-weight:700;font-size:18px">Mis hábitos</div>' +
-        '<div style="color:#8e8e93;font-size:14px">' + (msg || 'Escribe tu clave. Se recuerda en este dispositivo.') + '</div>' +
-        '<input type="password" autocomplete="current-password" placeholder="Clave" style="padding:12px;border:0;border-radius:10px;background:#242424;color:#fff;font:inherit">' +
-        '<button style="border:0;border-radius:999px;padding:12px;background:#92e82a;color:#000;font-weight:600;font:inherit;font-weight:600">Entrar</button></form>';
+        '<div style="color:var(--mu,#777);font-size:14px">' + (msg || 'Escribe tu clave. Se recuerda en este dispositivo.') + '</div>' +
+        '<input type="password" autocomplete="current-password" placeholder="Clave" style="padding:12px;border:0;border-radius:10px;background:var(--soft,#f2f2ef);color:var(--ink,#111);font:inherit">' +
+        '<button style="border:0;border-radius:999px;padding:12px;background:var(--ink,#111);color:var(--card,#fff);font:inherit;font-weight:500">Entrar</button></form>';
       document.body.appendChild(o);
       var f = o.querySelector('form'), i = o.querySelector('input'); i.focus();
       f.onsubmit = function (e) { e.preventDefault(); if (!i.value) return; o.remove(); res(i.value); };
