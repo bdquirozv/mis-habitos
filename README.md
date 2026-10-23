@@ -29,3 +29,6 @@ Pega el nuevo código, vuelve a poner tu clave y crea una **nueva versión**: Im
 **Botón 📲 Enviar al calendario** (pestaña Tareas, o 📲 Calendario en Hoy): crea un archivo `.ics` con tus tareas nuevas o cambiadas (hora, aviso y repetición). Ábrelo en el iPhone y toca **Agregar todo** para pasarlas al Calendario de iCloud. Solo se envía lo que aún no enviaste; "Enviar todas otra vez" las manda todas.
 
 **Por tarea:** el botón 📅 de cada tarea abre Google Calendar u Outlook con el evento ya lleno, o descarga su `.ics`.
+
+## Finanzas
+Pestaña **Finanzas** (ícono de billetera): registra gastos e ingresos en soles o dólares, con categoría, medio de pago y tarjeta. Los totales del mes se muestran en soles usando el tipo de cambio que pongas en *Ajustes de finanzas*. Los movimientos se guardan en la pestaña `config` de la hoja (filas `mov-…`).
