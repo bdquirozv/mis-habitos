@@ -387,7 +387,7 @@ body.nodock .peek{display:grid}
   </div>
   <div class="cats" id="fkpi"></div>
   <div class="fgrid">
-   <div class="panel"><div class="ph"><h2>Gastos por categoría</h2></div><div class="cbars" id="fcats"></div></div>
+   <div class="panel"><div class="ph"><h2>Gastos por categoría</h2><span class="date" style="margin:0">incluye compras con tarjeta</span></div><div class="cbars" id="fcats"></div></div>
    <div class="panel"><div class="ph"><h2>Cómo pagaste</h2></div><div class="cbars" id="fmedios"></div></div>
   </div>
   <div class="panel">
@@ -742,7 +742,7 @@ document.addEventListener('click',async function(e){
  else if(d.dc){var pr=d.dc.split('|');[].forEach.call(b.parentNode.querySelectorAll('.chip'),function(c){c.classList.toggle('on',c===b)});$(pr[0]+'_date').value=pr[1];futNote(pr[0])}
  else if(d.ft){setMovTipo(d.ft)}
  else if(d.newmov){movForm(null,d.newmov)}
- else if(d.cpay){movForm(null,'gasto',{cat:'deuda',tarjeta:d.cpay,medio:'transf'})}
+ else if(d.cpay){movForm(null,'gasto',{cat:'deuda',tarjeta:d.cpay,medio:'transf',monto:d.camt?+d.camt:undefined})}
  else if(d.csave!=null){var ci=+d.csave,cn=finCfg().tarjetas[ci];cfg.fin=Object.assign({},cfg.fin||{});cfg.fin.tj=Object.assign({},cfg.fin.tj||{});
   cfg.fin.tj[cn]={saldo:Math.max(0,+$('cd_s_'+ci).value||0),pago:Math.max(0,+$('cd_p_'+ci).value||0),tea:Math.max(0,+$('cd_t_'+ci).value||0)};
   if(db){try{await db.doc('config/ajustes').set(cfgDoc());toast('Plan de '+cn+' guardado')}catch(err){toast('No se pudo guardar el plan')}}else toast('Plan aplicado (vista previa)');b.blur();renderFin()}
@@ -922,28 +922,35 @@ function renderCards(){var fc=finCfg();if(document.activeElement&&document.activ
 }
 function cardPreview(i){var n=finCfg().tarjetas[i],st=cardState(n),s=+$('cd_s_'+i).value||0,p=+$('cd_p_'+i).value||0,t=+$('cd_t_'+i).value||0;
  $('cd_r_'+i).innerHTML=payTxt(Math.max(0,s+st.con-st.pag),p,t)}
+function cardMonth(n,off){var st=cardState(n),c=st.cfg,P=c.pago;if(!(P>0)||off<0)return 0;var r=c.tea>0?Math.pow(1+c.tea/100,1/12)-1:0;
+ var paidM=function(o,onlyReal){var rr=monthRange(o);return MV.filter(function(m){return m.tarjeta===n&&m.cat==='deuda'&&m.tipo!=='ingreso'&&m.date>=rr[0]&&m.date<=rr[1]&&(!onlyReal||m.date<=TODAY)}).reduce(function(s,m){return s+toPEN(m)},0)};
+ var bal=st.deuda+paidM(0,true);
+ for(var k=0;k<=off;k++){if(bal<=0.005)return 0;var b2=bal*(1+(k?r:0)),due=Math.min(P,b2),paid=paidM(k),pend=Math.max(0,due-paid);if(k===off)return pend;bal=b2-Math.max(due,paid)}return 0}
 function renderFin(){var r=monthRange(fOff),a=r[0],b=r[1],fc=finCfg();
  var mt=sh(r[2],{month:'long',year:'numeric'}).replace(' de ',' ');$('fmes').textContent=mt.charAt(0).toUpperCase()+mt.slice(1);
- var l=MV.filter(function(m){return m.date>=a&&m.date<=b}),g=l.filter(function(m){return m.tipo!=='ingreso'&&m.cat!=='deuda'}),ig=l.filter(function(m){return m.tipo==='ingreso'}),pg=l.filter(function(m){return m.tipo!=='ingreso'&&m.cat==='deuda'});
+ var l=MV.filter(function(m){return m.date>=a&&m.date<=b}),gc=l.filter(function(m){return m.tipo!=='ingreso'&&m.cat!=='deuda'}),g=gc.filter(function(m){return m.medio!=='credito'}),gCred=gc.filter(function(m){return m.medio==='credito'}),ig=l.filter(function(m){return m.tipo==='ingreso'}),pg=l.filter(function(m){return m.tipo!=='ingreso'&&m.cat==='deuda'});
  var S2=function(arr,mon){return arr.filter(function(m){return !mon||m.mon===mon}).reduce(function(s,m){return s+(+m.monto||0)},0)},P2=function(arr){return arr.reduce(function(s,m){return s+toPEN(m)},0)};
  var fut=function(m){return m.date>TODAY},real=function(arr){return arr.filter(function(m){return !fut(m)})},plan=function(arr){return arr.filter(fut)};
- var gT=P2(real(g)),iT=P2(real(ig)),gPl=P2(plan(g)),iPl=P2(plan(ig)),gAll=gT+gPl,iAll=iT+iPl,proj=iAll-gAll,bal=iT-gT;
+ var planC=fc.tarjetas.map(function(n){return {n:n,v:cardMonth(n,fOff)}}).filter(function(x){return x.v>0.009}),planT=planC.reduce(function(s,x){return s+x.v},0),pgT=P2(pg);
+ var gT=P2(real(g))+P2(real(pg)),iT=P2(real(ig)),gPl=P2(plan(g))+P2(plan(pg))+planT,iPl=P2(plan(ig)),gAll=gT+gPl,iAll=iT+iPl,proj=iAll-gAll,bal=iT-gT;
  var split=function(arr){var p=S2(arr,'PEN'),u=S2(arr,'USD');return soles(p)+(u?' · '+dol(u):'')};
  var pct=fc.presu?Math.min(100,gT/fc.presu*100):0,pctP=fc.presu?Math.min(100,gAll/fc.presu*100):0;
  var det=function(done,pl,word){return pl?'<span>✓ '+word+' '+soles(done)+'</span><span class="plan">📅 Por '+(word==='Recibido'?'recibir':'pagar')+' '+soles(pl)+'</span>':'<span>'+word+' todo</span>'};
  var debt=fc.tarjetas.reduce(function(s,n){return s+cardState(n).deuda},0);
  $('fkpi').innerHTML=
-  '<div class="cat inv" style="--c:'+(proj>=0?'var(--ok)':'var(--urg)')+'"><div class="hd"><span class="nm">Balance del mes</span><span class="pill '+(proj>=0?'ok':'bad')+'">'+(proj>=0?'A favor':'En contra')+'</span></div><div class="big num">'+(proj<0?'−':'')+soles(Math.abs(proj))+'</div><div class="meta"><span>Ingresos − gastos del mes</span><span>US$ 1 = S/ '+nf(fc.tc,2)+'</span></div>'+((gPl||iPl)?'<div class="meta"><span>A la fecha (sin lo planificado)</span><span class="num">'+(bal<0?'−':'')+soles(Math.abs(bal))+'</span></div>':'')+'</div>'+
+  '<div class="cat inv" style="--c:'+(proj>=0?'var(--ok)':'var(--urg)')+'"><div class="hd"><span class="nm">Balance del mes</span><span class="pill '+(proj>=0?'ok':'bad')+'">'+(proj>=0?'A favor':'En contra')+'</span></div><div class="big num">'+(proj<0?'−':'')+soles(Math.abs(proj))+'</div><div class="meta"><span>Ingresos − gastos − pagos de tarjeta</span><span>US$ 1 = S/ '+nf(fc.tc,2)+'</span></div>'+((gPl||iPl)?'<div class="meta"><span>A la fecha (sin lo planificado)</span><span class="num">'+(bal<0?'−':'')+soles(Math.abs(bal))+'</span></div>':'')+'</div>'+
   '<div class="cat" style="--c:var(--ok)"><div class="hd"><span class="nm">Ingresos</span><span class="pill">'+ig.length+'</span></div><div class="big num">'+soles(iAll)+'</div><div class="meta">'+(ig.length?det(iT,iPl,'Recibido'):'<span>Sin ingresos este mes</span>')+'</div>'+(S2(ig,'USD')?'<div class="meta"><span>'+split(ig)+'</span></div>':'')+'</div>'+
-  '<div class="cat" style="--c:var(--urg)"><div class="hd"><span class="nm">Gastos</span><span class="pill'+(fc.presu&&gAll>fc.presu?' bad':fc.presu&&pctP>=80?' warn':'')+'">'+g.length+'</span></div><div class="big num">'+soles(gAll)+'</div>'+
+  '<div class="cat" style="--c:var(--urg)"><div class="hd"><span class="nm">Gastos</span><span class="pill'+(fc.presu&&gAll>fc.presu?' bad':fc.presu&&pctP>=80?' warn':'')+'">'+(g.length+pg.length+planC.length)+'</span></div><div class="big num">'+soles(gAll)+'</div>'+
    (fc.presu?'<div class="bar pbar"><i style="width:'+pctP+'%;background:var(--imp);opacity:.45"></i><i style="width:'+pct+'%;background:'+(gAll>fc.presu?'var(--urg)':'var(--ink)')+'"></i></div><div class="meta"><span>Presupuesto '+soles(fc.presu)+'</span><span>'+(gAll>fc.presu?'Te pasas por '+soles(gAll-fc.presu):'Quedan '+soles(fc.presu-gAll))+'</span></div>':'')+
-   '<div class="meta">'+(g.length?det(gT,gPl,'Pagado'):'<span>Sin gastos este mes</span>')+'</div></div>'+
+   '<div class="meta">'+((g.length||pg.length||planT)?det(gT,gPl,'Pagado'):'<span>Sin gastos este mes</span>')+'</div>'+
+   ((pgT||planT)?'<div class="meta"><span>💳 Incluye pagos de tarjeta</span><span class="num">'+soles(pgT+planT)+(planT?' <span class="plan">(plan '+soles(planT)+')</span>':'')+'</span></div>':'')+
+   (gCred.length?'<div class="meta"><span>Compras con tarjeta (van a la deuda)</span><span class="num">'+soles(P2(gCred))+'</span></div>':'')+'</div>'+
   '<div class="cat" style="--c:var(--tra)"><div class="hd"><span class="nm">Deuda en tarjetas</span><span class="pill">'+fc.tarjetas.length+'</span></div><div class="big num" style="color:'+(debt>0?'var(--bad)':'var(--ink)')+'">'+soles(debt)+'</div><div class="meta"><span>Pagos a tarjetas este mes</span><span class="num amt-in">'+soles(P2(pg))+'</span></div><div class="meta"><span>Detalle y plan de pago abajo ↓</span></div></div>';
  var bars=function(arr,key,names,colf){var t=P2(arr),m={};arr.forEach(function(x){var k=x[key]||'otros';m[k]=(m[k]||0)+toPEN(x)});var ks=Object.keys(m).sort(function(x,y){return m[y]-m[x]});
   if(!ks.length)return '<div class="empty">Sin movimientos en este mes.</div>';
   return ks.map(function(k){var p=t?m[k]/t*100:0;return '<div class="cbar" style="--c:'+colf(k)+'"><div class="cb1"><span>'+esc(key==='cat'?catShort(k):names(k))+'</span><span class="num">'+soles(m[k])+' <small>'+nf(p,0)+'%</small></span></div><div class="bar"><i style="width:'+p+'%"></i></div></div>'}).join('')};
- $('fcats').innerHTML=bars(g,'cat',catName,function(k){return FCOL[k]||'var(--mu)'});
- $('fmedios').innerHTML=bars(g,'medio',function(k){return pick(MEDIOS,k)},function(){return 'var(--ink)'});
+ $('fcats').innerHTML=bars(gc,'cat',catName,function(k){return FCOL[k]||'var(--mu)'});
+ $('fmedios').innerHTML=bars(gc,'medio',function(k){return pick(MEDIOS,k)},function(){return 'var(--ink)'});
  renderCards();
  [].forEach.call($('ffil').children,function(x){x.classList.toggle('on',x.dataset.ff===fFil)});
  var ls=l.filter(function(m){return fFil==='todos'||(fFil==='ingreso'?m.tipo==='ingreso':m.tipo!=='ingreso')}).sort(function(x,y){return x.date<y.date?1:x.date>y.date?-1:(y.ts||0)-(x.ts||0)}),h='',last='';
@@ -951,6 +958,7 @@ function renderFin(){var r=monthRange(fOff),a=r[0],b=r[1],fc=finCfg();
   var inc=m.tipo==='ingreso',isP=fut(m),isPay=!inc&&m.cat==='deuda';
   h+='<div class="row" style="--c:'+(FCOL[m.cat]||'var(--mu)')+'"><span class="sw"></span><div class="tx"><div class="t1">'+esc(catShort(m.cat))+(m.nota?' · <span style="font-weight:400">'+esc(m.nota)+'</span>':'')+'</div><div class="t2">'+(isPay?'Pago a '+esc(m.tarjeta||'tarjeta')+' · '+esc(pick(MEDIOS,m.medio||'efectivo')):esc(pick(MEDIOS,m.medio||'efectivo'))+(m.tarjeta?' · '+esc(m.tarjeta):''))+(m.mon==='USD'?' · ≈ '+soles(toPEN(m)):'')+(isP?' <span class="pill" style="padding:1px 7px">📅 Planificado</span>':'')+'</div></div>'+
    '<div class="side"><span class="mn '+(inc?'amt-in':'')+(isP?' mplan':'')+'">'+(inc?'+ ':'− ')+amt(m)+'</span><div>'+(isP?'<button class="x" type="button" data-pay="'+esc(m.id)+'" title="Marcar como hecho hoy" aria-label="Marcar como hecho hoy">✓</button>':'')+'<button class="x" type="button" data-me="'+esc(m.id)+'" aria-label="Editar movimiento">✎</button><button class="x" type="button" data-xm="'+esc(m.id)+'" aria-label="Eliminar movimiento">×</button></div></div></div>'});
+ if(planC.length&&(fFil!=='ingreso'))h='<div class="fday">Plan de pago de tarjetas · este mes</div>'+planC.map(function(x){return '<div class="row" style="--c:var(--tra)"><span class="sw"></span><div class="tx"><div class="t1">Pago de tarjeta · <span style="font-weight:400">'+esc(x.n)+'</span></div><div class="t2">Según tu plan de pago <span class="pill" style="padding:1px 7px">📅 Planificado</span></div></div><div class="side"><span class="mn mplan">− '+soles(x.v)+'</span><div><button class="x" type="button" data-cpay="'+esc(x.n)+'" data-camt="'+x.v.toFixed(2)+'" title="Registrar este pago" aria-label="Registrar este pago">✓</button></div></div></div>'}).join('')+h;
  $('flist').innerHTML=h||'<div class="empty">Aún no hay movimientos este mes. Toca + Gasto o + Ingreso para registrar el primero.</div>';
  if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#fcfg'))return;
  $('f_tc').value=fc.tc;$('f_tjs').value=fc.tarjetas.join(', ');$('f_presu').value=fc.presu||'';
