@@ -197,6 +197,15 @@ svg text{font-family:var(--fb);fill:var(--mu);font-size:10px}
 .ck:hover{border-color:var(--ok)}
 .kc.fin .ck{background:var(--ok);border-color:var(--ok)}
 .kc.fin .ck::after{content:"✓"}
+.subt{border:0;background:transparent;color:var(--mu);font:500 12px var(--fb);padding:2px 0;white-space:nowrap}
+.subt:hover{color:var(--ink)}
+.sublist{display:grid;gap:2px;margin-top:-2px}
+.subi{display:flex;align-items:flex-start;gap:8px;border:0;background:transparent;color:var(--ink);text-align:left;font:400 13px var(--fb);padding:5px 4px;border-radius:8px}
+.subi:hover{background:var(--soft)}
+.sbx{width:17px;height:17px;border-radius:5px;border:1.6px solid var(--mu);flex:none;margin-top:1px;display:grid;place-items:center;font-size:11px;color:#fff}
+.subi.ok .sbx{background:var(--ok);border-color:var(--ok)}
+.subi.ok .sbx::after{content:"✓"}
+.subi.ok .sbt{text-decoration:line-through;color:var(--mu)}
 .dots3{border:0;background:transparent;color:var(--mu);font-size:18px;padding:0 4px;line-height:1;height:24px}
 .pr{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;color:#fff;white-space:nowrap}
 .pr.urgente{background:var(--urg)}.pr.importante{background:var(--imp);color:#111}
@@ -579,7 +588,14 @@ function tSort(A,B){if(A.done!==B.done)return A.done?1:-1;var a=A.t,b=B.t,pa=PRO
 function tSortD(A,B){if(A.d!==B.d)return A.d<B.d?-1:1;return tSort(A,B)}
 function dayTasks(d){return T.filter(function(t){return occurs(t,d)}).map(function(t){return item(t,d)}).sort(tSort)}
 function nextOcc(t){for(var k=0;k<400;k++){var d=ymd(add(new Date(),k));if(t.fin&&d>t.fin)return null;if(occurs(t,d))return d}return null}
-var tscope='dia',openMenu=null,dragKey=null;
+var tscope='dia',openMenu=null,dragKey=null,openSubs={};
+async function toggleSub(key,i){var j=key.lastIndexOf('|'),id=key.slice(0,j),d=key.slice(j+1),t=getT(id);if(!t||!t.sub||!t.sub[i])return;
+ var sub=t.sub.map(function(x,k){return k===i?{x:x.x,ok:!x.ok}:{x:x.x,ok:!!x.ok}}),n=sub.filter(function(x){return x.ok}).length,all=n===sub.length,cur=estOf(t,d);
+ await patchT(id,{sub:sub});
+ if(all&&cur!=='fin'){await setEst(key,'fin');toast('¡Todas las subtareas listas! Tarea finalizada')}
+ else if(!all&&cur==='fin'){await setEst(key,'proc');toast('Subtarea pendiente: la tarea vuelve a En proceso')}
+ else if(n>0&&cur==='pend'){await setEst(key,'proc');toast('Subtarea hecha · tarea En proceso ('+n+'/'+sub.length+')')}
+ else toast('Subtareas: '+n+'/'+sub.length)}
 function boardItems(){if(tscope==='dia')return dayTasks(tday);
  var lim=ymd(add(new Date(),-30)),out=[];
  T.forEach(function(t){if(t.rep){var d=nextOcc(t);if(d)out.push(item(t,d))}else if(t.date){var o=item(t,t.date);if(!(o.done&&t.date<lim))out.push(o)}});
@@ -606,7 +622,8 @@ function kCard(o){var t=o.t,tp=tTipo(t),hb=tHab(t),col=hb?'var(--'+hb+')':tp==='
   '<div class="r1"><span class="tag" style="--c:'+col+'">'+esc(tagName)+'</span><div>'+(pr!=='normal'&&!o.done?'<span class="pr '+pr+'">'+(pr==='urgente'?'Urgente':'Importante')+'</span>':'')+
   '<button class="ck" type="button" data-tt="'+key+'" aria-label="'+(o.done?'Marcar como pendiente':'Marcar como finalizada')+'"></button><button class="dots3" type="button" data-km="'+key+'" aria-label="Opciones de la tarea">⋯</button></div></div>'+
   '<div class="ttl">'+esc(t.txt)+'</div>'+
-  (sub.length?'<div class="subp"><span>✓ '+ok+'/'+sub.length+'</span><div class="bar"><i style="width:'+(ok/sub.length*100)+'%"></i></div></div>':'')+
+  (sub.length?'<div class="subp"><button type="button" class="subt" data-subt="'+key+'" aria-expanded="'+(openSubs[raw]?'true':'false')+'">✓ '+ok+'/'+sub.length+' '+(openSubs[raw]?'▴':'▾')+'</button><div class="bar"><i style="width:'+(ok/sub.length*100)+'%"></i></div></div>'+
+   (openSubs[raw]?'<div class="sublist">'+sub.map(function(sb,i){return '<button type="button" class="subi'+(sb.ok?' ok':'')+'" data-sk="'+key+'#'+i+'" aria-pressed="'+(sb.ok?'true':'false')+'"><span class="sbx"></span><span class="sbt">'+esc(sb.x)+'</span></button>'}).join('')+'</div>':''):'')+
   '<div class="kf">'+dueTxt(o)+(t.rep?'<span>🔁 '+REP_TXT[t.rep]+'</span>':'')+(t.hora?'<span>'+hm(t.dur||30)+'</span>':'')+(money(t.precio,t.mon)?'<span>'+esc(money(t.precio,t.mon))+'</span>':'')+((t.aviso!==''&&t.aviso!=null&&t.hora)?'<span title="Con aviso">⏰</span>':'')+(t.nota?'<span title="'+esc(t.nota)+'">📝 '+esc(t.nota.length>26?t.nota.slice(0,26)+'…':t.nota)+'</span>':'')+'</div>';
  if(openMenu===raw){h+='<div class="menu"><div class="mrow"><span class="ml">Mover a</span>'+EST.map(function(e){return '<button type="button" data-mv="'+key+'#'+e[0]+'" class="'+(o.est===e[0]?'on':'')+'">'+e[1]+'</button>'}).join('')+'</div>'+
   '<div class="mrow"><button type="button" data-te="'+id+'">✎ Editar</button><button type="button" data-tc="'+key+'">📅 Calendario</button><button type="button" class="del" data-td="'+id+'">'+(t.rep?'Eliminar serie':'Eliminar')+'</button></div>';
@@ -735,6 +752,8 @@ document.addEventListener('click',async function(e){
  else if(d.new){openNew(d.new)}
  else if(d.ts){tscope=d.ts;openMenu=null;renderTar()}
  else if(d.km){openMenu=openMenu===d.km?null:d.km;openCal=null;render()}
+ else if(d.subt){openSubs[d.subt]=!openSubs[d.subt];render()}
+ else if(d.sk){var q=d.sk.lastIndexOf('#');b.disabled=true;await toggleSub(d.sk.slice(0,q),+d.sk.slice(q+1));render()}
  else if(d.mv){var j=d.mv.lastIndexOf('#');openMenu=null;b.disabled=true;await setEst(d.mv.slice(0,j),d.mv.slice(j+1));render()}
  else if(d.rmsub){var sr=b.closest('.srow');if(sr)sr.remove()}
  else if(d.q){quickSheet(d.q,+d.n)}
