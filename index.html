@@ -269,6 +269,29 @@ body.nodock .peek{display:grid}
 #flist .t1,#flist .t2{overflow-wrap:break-word}
 .side{display:flex;flex-direction:column;align-items:flex-end;gap:0;flex:none}
 .side .x{padding:2px 6px;font-size:16px}
+/* escritorio ancho: usar todo el ancho y repartir en columnas */
+@media (min-width:1280px){
+ main{max-width:1760px;padding-left:124px;padding-right:40px}
+ body.nodock main{padding-left:40px}
+ .board{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .col{min-height:calc(100vh - 330px)}
+ #v-hoy{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);align-items:start}
+ #v-hoy>.hrow,#v-hoy>.cats{grid-column:1/-1}
+ #v-hoy>.panel:nth-child(3){grid-row:span 2}
+ #v-hoy .klist{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+ #v-hoy .strip{gap:4px}
+ #v-reg{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:start}
+ #v-pro{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+ #v-pro>#pf,#v-pro>.stats,#v-pro>.panel:last-child{grid-column:1/-1}
+ #cfgBox{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #v-aju>.go{justify-self:start;padding-inline:32px}
+ #v-fin .fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .cats{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+}
+@media (min-width:1600px){
+ #v-hoy .cats,#fkpi{grid-template-columns:repeat(4,minmax(0,1fr))}
+ #cfgBox{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -519,12 +542,13 @@ function renderReg(){
  $('minChips').innerHTML=[15,30,45,60,90,120].map(function(n){return '<button type="button" class="chip'+(+$('min').value===n?' on':'')+'" data-m="'+n+'">'+n+'</button>'}).join('');
 }
 
+function boxW(id){var e=$(id);var w=e?Math.floor(e.parentNode.clientWidth):0;return w>=200?w:340}
 function renderPro(){
  $('pf').innerHTML=[{k:'all',n:'Todo'}].concat(CATS).map(function(c){return '<button type="button" class="chip'+(pf===c.k?' on':'')+'" data-p="'+c.k+'">'+(c.i?c.i+' ':'')+c.n+'</button>'}).join('');
  var col=pf==='all'?'var(--ink)':'var(--'+pf+')',k=pf==='all'?null:pf;
  [].forEach.call(document.querySelectorAll('.lv'),function(b){b.style.background=col;b.style.opacity=b.dataset.o});
  // heatmap
- var W=17,cs=14,gp=3,ox=22,oy=16,end=wStart(new Date()),start=add(end,-(W-1)*7),by={};
+ var W=17,gp=3,ox=22,cs=Math.max(10,Math.min(36,Math.floor((boxW('heat')-ox)/W)-gp)),oy=16,end=wStart(new Date()),start=add(end,-(W-1)*7),by={};
  S.forEach(function(x){if(!k||x.cat===k)by[x.date]=(by[x.date]||0)+(+x.min||0)});
  var svg='<svg width="'+(ox+W*(cs+gp))+'" height="'+(oy+7*(cs+gp))+'" role="img" aria-label="Mapa de constancia">',lastM=-1;
  ['L','','X','','V','','D'].forEach(function(t,i){if(t)svg+='<text x="0" y="'+(oy+i*(cs+gp)+11)+'">'+t+'</text>'});
@@ -535,8 +559,8 @@ function renderPro(){
  // bars
  var N=8,ww=[],mx=0;
  for(var j=N-1;j>=0;j--){var a=add(end,-7*j),b=ymd(add(a,6)),v=CATS.map(function(c){return (!k||c.k===k)?sumRange(c.k,ymd(a),b):0});ww.push({a:a,v:v});mx=Math.max(mx,v.reduce(function(p,q){return p+q},0))}
- var goal=k?cfg[k].min:0;mx=Math.max(mx,goal,60);var top=Math.ceil(mx*1.1/60)*60,cw=340,ch=180,l=34,bt=22,pw=cw-l-6,bw=pw/N;
- var g='<svg viewBox="0 0 '+cw+' '+ch+'" width="100%" style="min-width:300px" role="img" aria-label="Minutos por semana">';
+ var goal=k?cfg[k].min:0;mx=Math.max(mx,goal,60);var top=Math.ceil(mx*1.1/60)*60,cw=boxW('chart'),ch=200,l=34,bt=22,pw=cw-l-6,bw=pw/N;
+ var g='<svg viewBox="0 0 '+cw+' '+ch+'" width="100%"  role="img" aria-label="Minutos por semana">';
  [0,top/2,top].forEach(function(t){var y=ch-bt-(t/top)*(ch-bt-10);g+='<line x1="'+l+'" x2="'+cw+'" y1="'+y+'" y2="'+y+'" style="stroke:var(--line)"/><text x="'+(l-5)+'" y="'+(y+3)+'" text-anchor="end">'+(t>=60?Math.round(t/60*10)/10+'h':t)+'</text>'});
  ww.forEach(function(x,i){var y=ch-bt,X=l+i*bw+bw*.2,BW=bw*.6;CATS.forEach(function(c,ci){var h=x.v[ci]/top*(ch-bt-10);if(h>0){y-=h;g+='<rect x="'+X+'" y="'+y+'" width="'+BW+'" height="'+h+'" style="fill:var(--'+c.k+')"><title>'+c.n+': '+hm(x.v[ci])+'</title></rect>'}});
   if(i%2===1||N<=6)g+='<text x="'+(X+BW/2)+'" y="'+(ch-7)+'" text-anchor="middle">'+sh(x.a,{day:'numeric',month:'short'}).replace('.','')+'</text>'});
@@ -563,6 +587,7 @@ function renderAju(){
   '<div class="fld"><label class="lab" for="n_alt">Estatura (cm)</label><input id="n_alt" type="number" min="100" max="230" value="'+(cfg.altura||'')+'"></div></div></div>';
 }
 
+var rzT;window.addEventListener('resize',function(){clearTimeout(rzT);rzT=setTimeout(function(){if(view==='pro')renderPro()},200)});
 // ---- Tareas ----
 var T=[],tday=TODAY,openCal=null,dl=null;
 var TZ=(function(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'America/Lima'}catch(e){return 'America/Lima'}})();
@@ -851,11 +876,11 @@ function renderBody(){
  for(var j=11;j>=0;j--){var a=add(end,-7*j),v=wAvg(ymd(a),ymd(add(a,6)));if(v)pts.push({w:isoWeek(a),v:v})}
  var lw=lastW(TODAY),iv=lw?imc(+lw.peso):0;
  $('pesoNote').textContent=lw?'Último: '+nf(lw.peso,1)+' kg'+(iv?' · IMC '+nf(iv,1)+' ('+imcCat(iv)[0]+')':''):'';
- var cw=340,ch=170,l=34,bt=22;
+ var cw=Math.max(boxW('pesoChart'),boxW('pasosChart')),ch=190,l=34,bt=22;
  if(!pts.length)$('pesoChart').innerHTML='<div class="empty">Registra tu peso en Registrar → Pasos y peso. Aquí verás el promedio de cada semana.</div>';
  else{var mn=Math.min.apply(null,pts.map(function(p){return p.v})),mx=Math.max.apply(null,pts.map(function(p){return p.v}));mn=Math.floor(mn-1);mx=Math.ceil(mx+1);
   var X=function(i){return pts.length===1?(l+cw)/2:l+10+i*((cw-l-20)/(pts.length-1))},Y=function(v){return ch-bt-(v-mn)/(mx-mn)*(ch-bt-12)};
-  var g='<svg viewBox="0 0 '+cw+' '+ch+'" width="100%" style="min-width:300px" role="img" aria-label="Peso promedio por semana">';
+  var g='<svg viewBox="0 0 '+cw+' '+ch+'" width="100%"  role="img" aria-label="Peso promedio por semana">';
   [mn,(mn+mx)/2,mx].forEach(function(t){var y=Y(t);g+='<line x1="'+l+'" x2="'+cw+'" y1="'+y+'" y2="'+y+'" style="stroke:var(--line)"/><text x="'+(l-5)+'" y="'+(y+3)+'" text-anchor="end">'+nf(t,(mx-mn)%2?1:0)+'</text>'});
   g+='<polyline points="'+pts.map(function(p,i){return X(i)+','+Y(p.v)}).join(' ')+'" style="fill:none;stroke:var(--pe);stroke-width:2.5;stroke-linejoin:round"/>';
   pts.forEach(function(p,i){var last=i===pts.length-1;g+='<circle cx="'+X(i)+'" cy="'+Y(p.v)+'" r="'+(last?5:3.5)+'" style="fill:var(--pe)"><title>Semana '+p.w+': '+nf(p.v,1)+' kg</title></circle><text x="'+X(i)+'" y="'+(ch-7)+'" text-anchor="middle">S'+p.w+'</text>';if(last)g+='<text x="'+X(i)+'" y="'+(Y(p.v)-10)+'" text-anchor="middle" style="fill:var(--ink);font-weight:600">'+nf(p.v,1)+'</text>'});
@@ -865,7 +890,7 @@ function renderBody(){
  for(var k=13;k>=0;k--){var d=ymd(add(new Date(),-k)),m=mOf(d),v2=m?+m.pasos||0:0;days.push({d:d,v:v2});if(v2>mxs)mxs=v2;if(v2>=gl)ok++}
  $('pasosNote').textContent=ok+' de 14 días con '+nf(gl);
  var bw=(cw-l-6)/14,top=Math.ceil(mxs/5000)*5000,Yp=function(v){return ch-bt-(v/top)*(ch-bt-10)};
- var s='<svg viewBox="0 0 '+cw+' '+ch+'" width="100%" style="min-width:300px" role="img" aria-label="Pasos por día">';
+ var s='<svg viewBox="0 0 '+cw+' '+ch+'" width="100%"  role="img" aria-label="Pasos por día">';
  [0,top/2,top].forEach(function(t){var y=Yp(t);s+='<line x1="'+l+'" x2="'+cw+'" y1="'+y+'" y2="'+y+'" style="stroke:var(--line)"/><text x="'+(l-5)+'" y="'+(y+3)+'" text-anchor="end">'+(t?nf(t/1000,t%1000?1:0)+'k':0)+'</text>'});
  days.forEach(function(x,i){var h=(x.v/top)*(ch-bt-10),X0=l+i*bw+bw*.18,W=bw*.64;if(h>0)s+='<rect x="'+X0+'" y="'+(ch-bt-h)+'" width="'+W+'" height="'+h+'" rx="2" style="fill:var(--pa);fill-opacity:'+(x.v>=gl?1:.45)+'"><title>'+sh(P(x.d),{weekday:'short',day:'numeric'})+': '+nf(x.v)+' pasos</title></rect>';
   if(i%2===1)s+='<text x="'+(X0+W/2)+'" y="'+(ch-7)+'" text-anchor="middle">'+P(x.d).getDate()+'</text>'});
