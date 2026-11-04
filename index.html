@@ -1541,7 +1541,7 @@ function cardEvents(ym,off){var y=+ym.slice(0,4),m=+ym.slice(5,7),last=new Date(
  finCfg().tarjetas.forEach(function(n){var c=((cfg.fin||{}).tj||{})[n]||{};
   if(+c.corte)out.push({k:'corte',n:n,d:ym+'-'+pad(Math.min(+c.corte,last))});
   if(+c.venc){var plan=cardMonth(n,off),paid=MV.filter(function(x){return x.tarjeta===n&&x.cat==='deuda'&&x.tipo!=='ingreso'&&x.date>=r[0]&&x.date<=r[1]&&x.date<=TODAY}).reduce(function(s,x){return s+toPEN(x)},0);
-   out.push({k:'venc',n:n,d:ym+'-'+pad(Math.min(+c.venc,last)),amt:plan,paid:paid>0&&plan<=0.009,pagado:paid,deuda:cardState(n).deuda})}});
+   out.push({k:'venc',n:n,d:ym+'-'+pad(Math.min(+c.venc,last)),amt:plan,paid:(paid>0&&plan<=0.009)||(plan<=0.009&&cardState(n).deuda<=0.009),pagado:paid,deuda:cardState(n).deuda})}});
  return out}
 function payItems(off){var r=monthRange(off),ym=r[0].slice(0,7),it=[];
  blMonth(ym).forEach(function(x){it.push({t:'bill',d:x.d,x:x})});
@@ -1550,7 +1550,7 @@ function payItems(off){var r=monthRange(off),ym=r[0].slice(0,7),it=[];
 function payState(i){if(i.t==='corte')return 'corte';var paid=i.t==='bill'?i.x.paid:i.x.paid;if(paid)return 'ok';return i.d<TODAY?'late':(Math.round((P(i.d)-P(TODAY))/864e5)<=3?'soon':'pend')}
 var PCOL={ok:'var(--ok)',late:'var(--urg)',soon:'var(--imp)',pend:'var(--nor)',corte:'var(--tra)'};
 function payName(i){return i.t==='bill'?i.x.b.nombre:i.t==='corte'?'Corte '+i.x.n:'Pagar '+i.x.n}
-function payAmt(i){if(i.t==='bill')return i.x.b.mon==='USD'?dol(i.x.b.monto):soles(+i.x.b.monto||0);if(i.t==='venc')return i.x.amt>0.009?soles(i.x.amt):(i.x.pagado?'Pagado '+soles(i.x.pagado):(i.x.deuda>0?'Deuda '+soles(i.x.deuda):''));return ''}
+function payAmt(i){if(i.t==='bill')return i.x.b.mon==='USD'?dol(i.x.b.monto):soles(+i.x.b.monto||0);if(i.t==='venc')return i.x.amt>0.009?soles(i.x.amt):(i.x.pagado?'Pagado '+soles(i.x.pagado):(i.x.deuda>0?'Deuda '+soles(i.x.deuda):'Sin deuda'));return ''}
 function renderPagos(){var r=monthRange(fOff),m0=P(r[0]),y=m0.getFullYear(),mo=m0.getMonth(),last=+r[1].slice(8),items=payItems(fOff);
  if(pSel&&pSel.slice(0,7)!==r[0].slice(0,7))pSel='';
  var lead=(m0.getDay()+6)%7,cells=Math.ceil((lead+last)/7)*7,h='';
