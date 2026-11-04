@@ -32,3 +32,8 @@ Pega el nuevo código, vuelve a poner tu clave y crea una **nueva versión**: Im
 
 ## Finanzas
 Pestaña **Finanzas** (ícono de billetera): registra gastos e ingresos en soles o dólares, con categoría, medio de pago y tarjeta. Los totales del mes se muestran en soles usando el tipo de cambio que pongas en *Ajustes de finanzas*. Los movimientos se guardan en la pestaña `config` de la hoja (filas `mov-…`).
+
+## Notas y calendario
+- **Notas** (día, semana o mes): editor con títulos, negrita, resaltado, colores, listas, lista de pendientes, tablas e imágenes. Se guardan en la pestaña `config` de la hoja (filas `nota-…` y, si la nota es larga o tiene imágenes, `notc-…`).
+- **Calendario**: vista del mes con las tareas de cada día por estado y el resumen del mes.
+- **Tareas de varios días**: campo *Hasta* al crear o editar una tarea.
